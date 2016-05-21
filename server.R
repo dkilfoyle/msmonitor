@@ -1,13 +1,10 @@
 library(shiny)
 
-mspts = read.csv("patients.csv", stringsAsFactors = F)
-mspts$DateStarted = ymd(mspts$DateStarted)
-
 server <- shinyServer(function(input, output, session) {
   
   values = reactiveValues(mspts = mspts)
   
-  get_msevents = reactive({
+  getEvents = reactive({
     if (!is.null(input$evtsTable)) {
       DF = hot_to_r(input$evtsTable)
     } else {
@@ -15,6 +12,7 @@ server <- shinyServer(function(input, output, session) {
         DF = read.csv("events.csv", stringsAsFactors = F)
         DF$DueDate = ymd(DF$DueDate)
         DF$Completed = ymd(DF$Completed)
+        DF$Type = as.factor(DF$Type)
       }
       else
         DF = values[["msevents"]]
@@ -22,6 +20,43 @@ server <- shinyServer(function(input, output, session) {
     
     values[["msevents"]] = DF
     DF
+  })
+  
+  getFilteredEvents = reactive({
+    items = getEvents()
+    
+    nhi = toupper(input$evtsSearchNHI)
+    if (str_length(nhi) == 7) {
+      items = items %>%
+        filter(NHI == nhi)
+    }
+    
+    if (input$evtsSearchNHI == "All")
+      return (items)
+    
+    endDate = switch(
+      input$evtsTimeframe,
+      "All Pending" = ymd("2100/01/01"),
+      "This week" = today() + weeks(1),
+      "Next 6 weeks" = today() + weeks(6),
+      "Next 3 months" = today() + months(3),
+      ymd("2100/01/01")
+    )
+    endDate = as_date(endDate)
+    
+    if (input$evtsTimeframe == "Overdue") {
+      items = items %>%
+        filter(DueDate < today(), is.na(Completed))
+    } else if (input$evtsTimeframe == "Completed") {
+      items = items %>%
+        filter(!is.na(Completed))
+    } else
+    {
+      items = items %>%
+        filter(DueDate > today(), DueDate < endDate, is.na(Completed))
+    }
+    
+    items
   })
   
   # detect event selection
@@ -66,41 +101,6 @@ server <- shinyServer(function(input, output, session) {
     values$msevents[saveRow, "Comment"] = input$evtsComment
   })
   
-  getFilteredEvents = reactive({
-    items = get_msevents()
-    
-    nhi = toupper(input$evtsSearchNHI)
-    if (str_length(nhi) == 7) {
-      items = items %>%
-        filter(NHI == nhi)
-    }
-    
-    endDate = switch(
-      input$evtsTimeframe,
-      "All Pending" = ymd("2100/01/01"),
-      "This week" = today() + weeks(1),
-      "Next 6 weeks" = today() + weeks(6),
-      "Next 3 months" = today() + months(3),
-      ymd("2100/01/01")
-    )
-    endDate = as_date(endDate)
-    
-    if (input$evtsTimeframe == "Overdue") {
-      items = items %>%
-        filter(DueDate < today(), is.na(Completed))
-    } else if (input$evtsTimeframe == "Completed") {
-      items = items %>%
-        filter(!is.na(Completed))
-    } else
-    {
-      items = items %>%
-        filter(DueDate > today(), DueDate < endDate, is.na(Completed))
-    }
-    
-    items
-  })
-  
-  
   output$evtsTimeline <- renderTimelinevis({
     
     items = getFilteredEvents() %>% 
@@ -112,7 +112,7 @@ server <- shinyServer(function(input, output, session) {
       )
     
     if (nrow(items)==0) {
-      output$evtsFilterMessage = renderUI(h3("No Events Found"))
+      output$evtsFilterMessage = renderUI(div(class="alert alert-warning", h4("No Events Found")))
       return(NULL)
     }
     else
@@ -123,6 +123,7 @@ server <- shinyServer(function(input, output, session) {
       content = unique(items$NHI),
       title = values$mspts$Surname[values$mspts$NHI == unique(items$NHI)]
     )
+    
     timelinevis(
       items,
       groups,
@@ -145,6 +146,22 @@ server <- shinyServer(function(input, output, session) {
   #################################################
   ## Patients
   #################################################
+  
+  getPatients = reactive({
+    if (!is.null(input$ptsTable)) {
+      DF = hot_to_r(input$ptsTable)
+    } else {
+      if (is.null(values[["mspts"]])) {
+        DF = read.csv("patients.csv", stringsAsFactors = F)
+        DF$DateStarted = ymd(DF$DateStarted)
+      }
+      else
+        DF = values[["mspts"]]
+    }
+    
+    values[["mspts"]] = DF
+    DF
+  })
   
   observeEvent(input$addpt, {
     newrow = data.frame(
@@ -195,7 +212,7 @@ server <- shinyServer(function(input, output, session) {
   })
   
   output$ptsTable = DT::renderDataTable(
-    values$mspts,
+    getPatients(),
     options = list(
       lengthChange = F,
       order = list(list(1, "asc")),

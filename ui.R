@@ -69,7 +69,8 @@ ui <- shinyUI(navbarPage(
               "Next 6 weeks",
               "Next 3 months",
               "Overdue",
-              "Completed"
+              "Completed",
+              "All"
             )
           )
         )
@@ -77,8 +78,7 @@ ui <- shinyUI(navbarPage(
       mainPanel(tabsetPanel(
         tabPanel(
           "Timeline",
-          uiOutput("evtsFilterMessage"),
-          timelinevisOutput("evtsTimeline"),
+
           bsCollapse(
             bsCollapsePanel(
               "Selected Event",
@@ -110,7 +110,9 @@ ui <- shinyUI(navbarPage(
             ),
             id = "evtsCollapse",
             multiple = T
-          )
+          ),
+          uiOutput("evtsFilterMessage"),
+          timelinevisOutput("evtsTimeline")
         ), # end timeline tabPanel
         tabPanel("Table", rHandsontableOutput("evtsTable"))
       )) # end mainpanel

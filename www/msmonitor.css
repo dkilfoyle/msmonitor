@@ -33,3 +33,7 @@
 .header-panel {
   margin-bottom: 19px !important;
 }
+
+#evtsCollapse {
+  margin-top: 19px;
+}
