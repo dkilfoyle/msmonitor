@@ -2,21 +2,17 @@ library(shiny)
 
 server <- shinyServer(function(input, output, session) {
   
-  values = reactiveValues(mspts = mspts)
+  values = reactiveValues()
   
   getEvents = reactive({
-    if (!is.null(input$evtsTable)) {
-      DF = hot_to_r(input$evtsTable)
-    } else {
-      if (is.null(values[["msevents"]])) {
-        DF = read.csv("events.csv", stringsAsFactors = F)
-        DF$DueDate = ymd(DF$DueDate)
-        DF$Completed = ymd(DF$Completed)
-        DF$Type = as.factor(DF$Type)
-      }
-      else
-        DF = values[["msevents"]]
+    if (is.null(values[["msevents"]])) {
+      DF = read.csv("events.csv", stringsAsFactors = F)
+      DF$DueDate = ymd(DF$DueDate)
+      DF$Completed = ymd(DF$Completed)
+      DF$Type = as.factor(DF$Type)
     }
+    else
+      DF = values[["msevents"]]
     
     values[["msevents"]] = DF
     DF
@@ -31,8 +27,9 @@ server <- shinyServer(function(input, output, session) {
         filter(NHI == nhi)
     }
     
-    if (input$evtsSearchNHI == "All")
-      return (items)
+    if (input$evtsTimeframe == "All") {
+      return(items)
+    }
     
     endDate = switch(
       input$evtsTimeframe,
@@ -59,39 +56,42 @@ server <- shinyServer(function(input, output, session) {
     items
   })
   
-  # detect event selection
+  editEvent = function(id) {
+    updateCollapse(session, "evtsCollapse", open = "Selected Event")
+    se = getEvents()[getEvents()$EventId == id,]
+    updateTextInput(session, "evtsId", value = id)
+    updateTextInput(session, "evtsStartDate", value = se$DueDate)
+    updateTextInput(session, "evtsType", value = se$Type)
+    updateTextInput(session, "evtsNumber", value = se$Number)
+    updateTextInput(session, "evtsResult", value = se$Result)
+    updateTextInput(session, "evtsComment", value = se$Comment)
+    updateTextInput(session, "evtsCompleted", value = se$Completed)
+    output$evtsInfo = renderUI(tagList(h3(se$NHI),p(values$mspts$Surname[values$mspts$NHI==se$NHI])))
+  }
+  
+  # detect event selection from timeline
   observe({
     x = input$tlSelectEvent
     if (is.null(x))
       return()
-    cat(str(x))
     if (x$id == "evtsTimeline") {
-      updateCollapse(session,
-        "evtsCollapse",
-        open = "Selected Event",
-        close = "Filter Events")
-      se = values$msevents[values$msevents$EventId == x$items$id,]
-      updateTextInput(session, "evtsId", value = x$items$id)
-      updateTextInput(session, "evtsStartDate", value = se$DueDate)
-      updateTextInput(session, "evtsType", value = se$Type)
-      updateTextInput(session, "evtsNumber", value = se$Number)
-      updateTextInput(session, "evtsResult", value = se$Result)
-      updateTextInput(session, "evtsComment", value = se$Comment)
-      updateTextInput(session, "evtsCompleted", value = se$Completed)
-      output$evtsInfo = renderUI(tagList(h3(x$items$NHI),p(values$mspts$Surname[values$mspts$NHI==x$items$NHI])))
+      editEvent(x$items$id)
     }
   })
   
+  # detect event selection from DT table
   observe({
-    x = input$tlMoveEvent
-    updateDateInput(session, "evtsStartDate", value = x$item$start)
+    if (length(input$evtsTable_rows_selected) > 0) {
+      id = getFilteredEvents()[input$evtsTable_rows_selected, "EventId"]
+      editEvent(id)
+    }
   })
   
-  observeEvent(input$evtsCompletedButton, {
+  observeEvent(input$evtsCompleteButton, {
     updateDateInput(session, "evtsCompleted", value = today())
   })
   
-  observeEvent(input$evtsSaveChanges, {
+  observeEvent(input$evtsSaveButton, {
     saveRow = which(values$msevents$EventId == input$evtsId)
     values$msevents[saveRow, "DueDate"] = input$evtsStartDate
     values$msevents[saveRow, "Type"] = input$evtsType
@@ -99,6 +99,11 @@ server <- shinyServer(function(input, output, session) {
     values$msevents[saveRow, "Result"] = input$evtsResult
     values$msevents[saveRow, "Completed"] = input$evtsCompleted
     values$msevents[saveRow, "Comment"] = input$evtsComment
+  })
+  
+  observe({
+    x = input$tlMoveEvent
+    updateDateInput(session, "evtsStartDate", value = x$item$start)
   })
   
   output$evtsTimeline <- renderTimelinevis({
@@ -121,7 +126,7 @@ server <- shinyServer(function(input, output, session) {
     groups = data.frame(
       id = unique(items$NHI),
       content = unique(items$NHI),
-      title = values$mspts$Surname[values$mspts$NHI == unique(items$NHI)]
+      title = getPatients()$Surname[getPatients()$NHI == unique(items$NHI)]
     )
     
     timelinevis(
@@ -138,46 +143,53 @@ server <- shinyServer(function(input, output, session) {
     )
   })
   
-  output$evtsTable <- renderRHandsontable({
-    items = getFilteredEvents()
-    rhandsontable(items)
-  })
+  # output$evtsTable <- renderRHandsontable({
+  #   rhandsontable(getFilteredEvents(), rowHeaders=NULL)
+  # })
+  
+  output$evtsTable = DT::renderDataTable(
+    getFilteredEvents(),
+    options = list(
+      lengthChange = F,
+      order = list(list(1, "asc")),
+      paging = F,
+      info = F
+    ),
+    selection = "single",
+    class = 'cell-border stripe'
+  )
+  
   
   #################################################
   ## Patients
   #################################################
   
   getPatients = reactive({
-    if (!is.null(input$ptsTable)) {
-      DF = hot_to_r(input$ptsTable)
-    } else {
-      if (is.null(values[["mspts"]])) {
+    if (is.null(values[["mspts"]])) {
         DF = read.csv("patients.csv", stringsAsFactors = F)
         DF$DateStarted = ymd(DF$DateStarted)
       }
       else
         DF = values[["mspts"]]
-    }
     
     values[["mspts"]] = DF
     DF
   })
   
-  observeEvent(input$addpt, {
-    newrow = data.frame(
-      EventId = max(values$msevents$EventId) + 1,
-      NHI = "ACJ2321",
-      Type = "MRI",
-      Number = 1,
-      DueDate = dmy("1/23/2016"),
-      Completed = F
-    )
-    values$msevents = rbind(values$msevents, newrow)
+  getFilteredPatients = reactive({
+    pts = getPatients()
+    nhi = toupper(input$ptsSearchNHI)
+    if (str_length(nhi) == 7) {
+      pts = pts %>%
+        filter(NHI == nhi)
+    }
+    pts
   })
   
   observe({
     if (length(input$ptsTable_rows_selected) > 0) {
-      selrow = values$mspts[input$ptsTable_rows_selected,]
+      updateCollapse(session, "ptsCollapse", open = "Selected Patient")
+      selrow = getFilteredPatients()[input$ptsTable_rows_selected,]
       updateTextInput(session, "ptsNHI", value = selrow$NHI)
       updateTextInput(session, "ptsFirstName", value = selrow$FirstName)
       updateTextInput(session, "ptsSurname", value = selrow$Surname)
@@ -195,7 +207,7 @@ server <- shinyServer(function(input, output, session) {
   })
   
   observeEvent(input$ptsSave, {
-    saveRow = which(values$mspts$NHI == input$ptsNHI)
+    saveRow = which(getPatients()$NHI == input$ptsNHI)
     newRow = list(
       NHI = input$ptsNHI,
       Surname = input$ptsSurname,
@@ -212,7 +224,7 @@ server <- shinyServer(function(input, output, session) {
   })
   
   output$ptsTable = DT::renderDataTable(
-    getPatients(),
+    getFilteredPatients(),
     options = list(
       lengthChange = F,
       order = list(list(1, "asc")),
@@ -224,3 +236,15 @@ server <- shinyServer(function(input, output, session) {
   )
   
 })
+
+# observeEvent(input$evtsTableSaveButton,{
+#   cat(str(input$evtsTable))
+#   if (!is.null(input$evtsTable)) {
+#     DF = values[["msevents"]]
+#     DF2 = hot_to_r(input$evtsTable)
+#     for (i in 1:nrow(DF2)) {
+#       DF[DF$EventId == DF2$EventId[i],] = DF2[i, ]
+#     }
+#     values$msevents=DF
+#   }
+# })
