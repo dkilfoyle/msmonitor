@@ -1,14 +1,28 @@
 library(shiny)
 
-msevents = read.csv("events.csv", stringsAsFactors = F)
-msevents$DueDate = ymd(msevents$DueDate)
-msevents$Completed = ymd(msevents$Completed)
-
 mspts = read.csv("patients.csv", stringsAsFactors = F)
 mspts$DateStarted = ymd(mspts$DateStarted)
 
 server <- shinyServer(function(input, output, session) {
-  values = reactiveValues(msevents = msevents, mspts = mspts)
+  
+  values = reactiveValues(mspts = mspts)
+  
+  get_msevents = reactive({
+    if (!is.null(input$evtsTable)) {
+      DF = hot_to_r(input$evtsTable)
+    } else {
+      if (is.null(values[["msevents"]])) {
+        DF = read.csv("events.csv", stringsAsFactors = F)
+        DF$DueDate = ymd(DF$DueDate)
+        DF$Completed = ymd(DF$Completed)
+      }
+      else
+        DF = values[["msevents"]]
+    }
+    
+    values[["msevents"]] = DF
+    DF
+  })
   
   # detect event selection
   observe({
@@ -53,7 +67,7 @@ server <- shinyServer(function(input, output, session) {
   })
   
   getFilteredEvents = reactive({
-    items = values$msevents
+    items = get_msevents()
     
     nhi = toupper(input$evtsSearchNHI)
     if (str_length(nhi) == 7) {
@@ -83,20 +97,19 @@ server <- shinyServer(function(input, output, session) {
         filter(DueDate > today(), DueDate < endDate, is.na(Completed))
     }
     
-    items = items %>%
+    items
+  })
+  
+  
+  output$evtsTimeline <- renderTimelinevis({
+    
+    items = getFilteredEvents() %>% 
       mutate(
         content = Type,
         start = DueDate,
         group = NHI,
         id = EventId
       )
-    
-    items
-  })
-  
-  
-  output$evtsTimeline <- renderTimelinevis({
-    items = getFilteredEvents()
     
     if (nrow(items)==0) {
       output$evtsFilterMessage = renderUI(h3("No Events Found"))
@@ -126,8 +139,12 @@ server <- shinyServer(function(input, output, session) {
   
   output$evtsTable <- renderRHandsontable({
     items = getFilteredEvents()
-    rhandsontable(values$msevents[values$msevents$EventId == items$id,])
+    rhandsontable(items)
   })
+  
+  #################################################
+  ## Patients
+  #################################################
   
   observeEvent(input$addpt, {
     newrow = data.frame(
@@ -140,18 +157,6 @@ server <- shinyServer(function(input, output, session) {
     )
     values$msevents = rbind(values$msevents, newrow)
   })
-  
-  output$ptsTable = DT::renderDataTable(
-    values$mspts,
-    options = list(
-      lengthChange = F,
-      order = list(list(1, "asc")),
-      paging = F,
-      info = F
-    ),
-    selection = "single",
-    class = 'cell-border stripe'
-  )
   
   observe({
     if (length(input$ptsTable_rows_selected) > 0) {
@@ -188,5 +193,17 @@ server <- shinyServer(function(input, output, session) {
     else
       values$mspts[saveRow,] = newRow
   })
+  
+  output$ptsTable = DT::renderDataTable(
+    values$mspts,
+    options = list(
+      lengthChange = F,
+      order = list(list(1, "asc")),
+      paging = F,
+      info = F
+    ),
+    selection = "single",
+    class = 'cell-border stripe'
+  )
   
 })
