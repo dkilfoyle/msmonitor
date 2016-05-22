@@ -6,50 +6,7 @@ library(stringr)
 library(shinyBS)
 library(timelinevis)
 
-textareaInput <-
-  function(id,
-    label,
-    value = "",
-    rows = 5,
-    cols = 20,
-    class = "form-control") {
-    tags$div(
-      class = "form-group shiny-input-container",
-      tags$label('for' = id, label),
-      tags$textarea(
-        id = id,
-        class = class,
-        rows = rows,
-        cols = cols,
-        value
-      )
-    )
-  }
-
-hiddenTextInput = function (inputId,
-  label,
-  value = "",
-  width = NULL,
-  placeholder = NULL)
-{
-  tags$input(
-    id = inputId,
-    type = "text",
-    class = "form-control",
-    value = value,
-    placeholder = placeholder,
-    style = "display:none;"
-  )
-}
-
-titledPanel = function (title, ...) {
-  div(class="header-panel", div(class="panel panel-default",
-    div(class="panel-heading",
-      h3(title, class="panel-title")
-    ),
-    div(class="panel-body", ...)
-  ))
-}
+source("utils.R")
 
 ui <- shinyUI(navbarPage(
   "MS Monitoring Program",
@@ -87,21 +44,24 @@ ui <- shinyUI(navbarPage(
                 textareaInput("evtsComment", "Comment")
               ),
               column(width=4,
-                dateInput("evtsStartDate", "Due Date", ""),
+                dateInput("evtsDueDate", "Due Date", ""),
                 dateInput("evtsCompleted", "Date Completed", ""),
                 textareaInput("evtsResult", "Result")
               ),
               column(width=4,
-                headerPanel("Patient Info",
-                  uiOutput("evtsInfo")
-                ),
+                textInput("evtsNHI", "NHI", ""),
+                # titledPanel("Patient Info",
+                #   uiOutput("evtsInfo")
+                # ),
                 div(
                   class = "btn-group-vertical",
                   role = "group",
                   style = "width:100%",
-                  actionButton("evtsTLCompleteButton", "Mark as Completed"),
-                  actionButton("evtsTLNewButton", "Generate new event"),
-                  actionButton("evtsTLSaveButton", "Save Changes")
+                  actionButton("evtsCompleteButton", "Mark as Completed"),
+                  actionButton("evtsRepeatButton", "Repeat Event"),
+                  actionButton("evtsNewButton", "New Blank Event"),
+                  actionButton("evtsDeleteButton", "Delete Event"),
+                  actionButton("evtsSaveButton", "Save Changes")
                 )
               ))
           ),

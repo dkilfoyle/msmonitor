@@ -57,16 +57,18 @@ server <- shinyServer(function(input, output, session) {
   })
   
   editEvent = function(id) {
+    cat("editing ", id, "\n")
     updateCollapse(session, "evtsCollapse", open = "Selected Event")
     se = getEvents()[getEvents()$EventId == id,]
     updateTextInput(session, "evtsId", value = id)
-    updateTextInput(session, "evtsStartDate", value = se$DueDate)
+    updateTextInput(session, "evtsDueDate", value = se$DueDate)
     updateTextInput(session, "evtsType", value = se$Type)
     updateTextInput(session, "evtsNumber", value = se$Number)
     updateTextInput(session, "evtsResult", value = se$Result)
     updateTextInput(session, "evtsComment", value = se$Comment)
     updateTextInput(session, "evtsCompleted", value = se$Completed)
-    output$evtsInfo = renderUI(tagList(h3(se$NHI),p(values$mspts$Surname[values$mspts$NHI==se$NHI])))
+    updateTextInput(session, "evtsNHI", value=se$NHI)
+    # output$evtsInfo = renderUI(tagList(h3(se$NHI),p(values$mspts$Surname[values$mspts$NHI==se$NHI])))
   }
   
   # detect event selection from timeline
@@ -91,19 +93,38 @@ server <- shinyServer(function(input, output, session) {
     updateDateInput(session, "evtsCompleted", value = today())
   })
   
+  observeEvent(input$evtsNewButton, {
+    # TODO Check unsaved
+    newid = max(values$msevents$EventId)+1
+    values$msevents = rbind(values$msevents, data.frame(EventId = newid, NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment=""))
+    updateRadioButtons(session, "evtsTimeframe", selected="All")
+    editEvent(newid)
+  })
+  
+  observeEvent(input$evtsRepeatButton, {
+    # TODO Check unsaved
+    newid = max(values$msevents$EventId)+1
+    newduedate = input$evtsDueDate + months(3)
+    xx = data.frame(EventId = newid, NHI=input$evtsNHI, Type=input$evtsType, Number=as.numeric(input$evtsNumber)+1, DueDate=newduedate, Completed=ymd(""), Result="", Comment="")
+    values$msevents = rbind(values$msevents, xx) 
+    updateRadioButtons(session, "evtsTimeframe", selected="All")
+    editEvent(newid)
+  })
+
   observeEvent(input$evtsSaveButton, {
     saveRow = which(values$msevents$EventId == input$evtsId)
-    values$msevents[saveRow, "DueDate"] = input$evtsStartDate
+    values$msevents[saveRow, "DueDate"] = input$evtsDueDate
     values$msevents[saveRow, "Type"] = input$evtsType
     values$msevents[saveRow, "Number"] = input$evtsNumber
     values$msevents[saveRow, "Result"] = input$evtsResult
     values$msevents[saveRow, "Completed"] = input$evtsCompleted
     values$msevents[saveRow, "Comment"] = input$evtsComment
+    values$msevents[saveRow, "NHI"] = input$evtsNHI
   })
   
   observe({
     x = input$tlMoveEvent
-    updateDateInput(session, "evtsStartDate", value = x$item$start)
+    updateDateInput(session, "evtsDueDate", value = x$item$start)
   })
   
   output$evtsTimeline <- renderTimelinevis({
@@ -117,7 +138,7 @@ server <- shinyServer(function(input, output, session) {
       )
     
     if (nrow(items)==0) {
-      output$evtsFilterMessage = renderUI(div(class="alert alert-warning", h4("No Events Found")))
+      output$evtsFilterMessage = renderUI(div(class="alert alert-warning top-gap", h4("No Events Found")))
       return(NULL)
     }
     else
