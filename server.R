@@ -1,4 +1,5 @@
 library(shiny)
+library(DT)
 
 server <- shinyServer(function(input, output, session) {
   
@@ -71,6 +72,11 @@ server <- shinyServer(function(input, output, session) {
     # output$evtsInfo = renderUI(tagList(h3(se$NHI),p(values$mspts$Surname[values$mspts$NHI==se$NHI])))
   }
   
+  observe({
+    x = input$tlMoveEvent
+    updateDateInput(session, "evtsDueDate", value = x$item$start)
+  })
+  
   # detect event selection from timeline
   observe({
     x = input$tlSelectEvent
@@ -104,11 +110,33 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$evtsRepeatButton, {
     # TODO Check unsaved
     newid = max(values$msevents$EventId)+1
-    newduedate = input$evtsDueDate + months(3)
-    xx = data.frame(EventId = newid, NHI=input$evtsNHI, Type=input$evtsType, Number=as.numeric(input$evtsNumber)+1, DueDate=newduedate, Completed=ymd(""), Result="", Comment="")
-    values$msevents = rbind(values$msevents, xx) 
+    
+    pt = getPatients() %>% 
+      filter(NHI == input$evtsNHI) # get the patient associated with this event
+    cat(str(pt))
+    drug = getDrugs() %>%  
+      filter(Name == pt$Drug) # get the drug associated with this patient
+    
+    cat(str(drug))
+    
+    newduedate = input$evtsDueDate + months(drug[1, input$evtsType])
+    cat(newduedate)
+
+    values$msevents = rbind(
+      values$msevents,
+      data.frame(EventId = newid, NHI=input$evtsNHI, Type=input$evtsType, Number=as.numeric(input$evtsNumber)+1, DueDate=newduedate, Completed=ymd(""), Result="", Comment="")
+    ) 
+    
+    updateTextInput(session, "evtsSearchNHI", value=input$evtsNHI)
     updateRadioButtons(session, "evtsTimeframe", selected="All")
-    editEvent(newid)
+    updateTabsetPanel(session, "evtsViewerTabset", selected="Table")
+    
+    # TODO
+    # Send custom event to select newid
+    # session$sendCustomMessage(type="timeline-select", message=list(elid="evtsTimeline", itemid=newid))
+    x=getEvents() %>% 
+      filter(NHI==input$evtsNHI)
+    selectRows(dataTableProxy("evtsTable"), selected=which(x$EventId == newid))
   })
 
   observeEvent(input$evtsSaveButton, {
@@ -120,11 +148,7 @@ server <- shinyServer(function(input, output, session) {
     values$msevents[saveRow, "Completed"] = input$evtsCompleted
     values$msevents[saveRow, "Comment"] = input$evtsComment
     values$msevents[saveRow, "NHI"] = input$evtsNHI
-  })
-  
-  observe({
-    x = input$tlMoveEvent
-    updateDateInput(session, "evtsDueDate", value = x$item$start)
+    write.csv(getEvents(), file="events.csv", row.names=F)
   })
   
   output$evtsTimeline <- renderTimelinevis({
@@ -163,10 +187,6 @@ server <- shinyServer(function(input, output, session) {
       snap = NULL
     )
   })
-  
-  # output$evtsTable <- renderRHandsontable({
-  #   rhandsontable(getFilteredEvents(), rowHeaders=NULL)
-  # })
   
   output$evtsTable = DT::renderDataTable(
     getFilteredEvents(),
@@ -242,6 +262,8 @@ server <- shinyServer(function(input, output, session) {
       values$mspts = rbind(values$mspts, newRow)
     else
       values$mspts[saveRow,] = newRow
+    
+    write.csv(getPatients(), file="patients.csv", row.names=F)
   })
   
   output$ptsTable = DT::renderDataTable(
@@ -256,16 +278,32 @@ server <- shinyServer(function(input, output, session) {
     class = 'cell-border stripe'
   )
   
+  ##########################################################################
+  ## Setup
+  ##########################################################################
+  
+  
+  getDrugs = reactive({
+    if (!is.null(input$drugsTable)) {
+      DF = hot_to_r(input$drugsTable)
+      values$msdrugs=DF
+    }
+    else if (is.null(values[["msdrugs"]])) {
+      DF = read.csv("drugs.csv", stringsAsFactors = F)
+    }
+    else
+      DF = values[["msdrugs"]]
+    
+    values[["msdrugs"]] = DF
+    DF
+  })
+  
+  observeEvent(input$drugsSave, {
+    write.csv(getDrugs(), file="drugs.csv", row.names=F)
+  })
+  
+  output$drugsTable <- renderRHandsontable({
+    rhandsontable(getDrugs(), rowHeaders=NULL)
+  })
+  
 })
-
-# observeEvent(input$evtsTableSaveButton,{
-#   cat(str(input$evtsTable))
-#   if (!is.null(input$evtsTable)) {
-#     DF = values[["msevents"]]
-#     DF2 = hot_to_r(input$evtsTable)
-#     for (i in 1:nrow(DF2)) {
-#       DF[DF$EventId == DF2$EventId[i],] = DF2[i, ]
-#     }
-#     values$msevents=DF
-#   }
-# })

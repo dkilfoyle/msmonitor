@@ -76,8 +76,8 @@ ui <- shinyUI(navbarPage(
           tabPanel("Table", 
             # rHandsontableOutput("evtsTable"))
             div(class="top-gap"),
-            DT::dataTableOutput("evtsTable"))
-      )) # end mainpanel
+            DT::dataTableOutput("evtsTable")),
+          id="evtsViewerTabset")) # end mainpanel
     )), # end tabpanel Events
   tabPanel(
     "Patients",
@@ -120,5 +120,17 @@ ui <- shinyUI(navbarPage(
       ) # end main panel
     ) # end sidebarlayout
   ), # end tabpanel patients
-  tabPanel("Setup")
+  tabPanel("Setup",
+    sidebarLayout(
+      sidebarPanel(
+        #action buttons
+        actionButton("drugsSave", "Save"),
+        actionButton("drugsNew", "New"),
+        actionButton("drugsDelete", "Delete")
+      ),
+      mainPanel(
+        helpText("Recommended interval in months for each test"),
+        rHandsontableOutput("drugsTable")
+      )
+    ))
 ))
