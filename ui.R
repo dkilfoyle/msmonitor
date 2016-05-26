@@ -16,7 +16,7 @@ ui <- shinyUI(navbarPage(
       sidebarPanel(
         includeCSS("www/msmonitor.css"),
         titledPanel("Filter Events",
-          textInput("evtsSearchNHI", "NHI", placeholder = "Leave blank to search all"),
+          textButtonInput("evtsSearchNHI", "NHI", "evtsClearSearchButton", "Clear", placeholder = "Leave blank to search all"),
           radioButtons(
             "evtsTimeframe",
             "Timeframe",

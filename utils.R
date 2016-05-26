@@ -34,6 +34,17 @@ hiddenTextInput = function (inputId,
   )
 }
 
+textButtonInput = function(inputid, inputlabel, buttonid, buttonlabel, value="", width=NULL, placeholder=NULL) {
+  div(class="form-group shiny-input-container",
+    tags$label(`for`=inputid, inputlabel),
+    div(class="input-group", style="width: 18em;",
+      tags$input(id=inputid, type="text", class="form-control", value=value, placeholder=placeholder),
+      span(class="input-group-btn",
+        actionButton(buttonid, buttonlabel))
+    )
+  )
+}
+
 titledPanel = function (title, ...) {
   div(class="header-panel", div(class="panel panel-default",
     div(class="panel-heading",

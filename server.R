@@ -95,6 +95,10 @@ server <- shinyServer(function(input, output, session) {
     }
   })
   
+  observeEvent(input$evtsClearSearchButton, {
+    updateTextInput(session, "evtsSearchNHI", value="")
+  })
+  
   observeEvent(input$evtsCompleteButton, {
     updateDateInput(session, "evtsCompleted", value = today())
   })
