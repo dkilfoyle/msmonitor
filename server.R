@@ -28,30 +28,33 @@ server <- shinyServer(function(input, output, session) {
         filter(NHI == nhi)
     }
     
-    if (input$evtsTimeframe == "All") {
-      return(items)
+    if (input$evtsFilterTimeframe != "All") {
+      endDate = switch(
+        input$evtsFilterTimeframe,
+        "All Pending" = ymd("2100/01/01"),
+        "This week" = today() + weeks(1),
+        "Next 6 weeks" = today() + weeks(6),
+        "Next 3 months" = today() + months(3),
+        ymd("2100/01/01")
+      )
+      endDate = as_date(endDate)
+      
+      if (input$evtsFilterTimeframe == "Overdue") {
+        items = items %>%
+          filter(DueDate < today(), is.na(Completed))
+      } else if (input$evtsFilterTimeframe == "Completed") {
+        items = items %>%
+          filter(!is.na(Completed))
+      } else
+      {
+        items = items %>%
+          filter(DueDate > today(), DueDate < endDate, is.na(Completed))
+      }
     }
     
-    endDate = switch(
-      input$evtsTimeframe,
-      "All Pending" = ymd("2100/01/01"),
-      "This week" = today() + weeks(1),
-      "Next 6 weeks" = today() + weeks(6),
-      "Next 3 months" = today() + months(3),
-      ymd("2100/01/01")
-    )
-    endDate = as_date(endDate)
-    
-    if (input$evtsTimeframe == "Overdue") {
-      items = items %>%
-        filter(DueDate < today(), is.na(Completed))
-    } else if (input$evtsTimeframe == "Completed") {
-      items = items %>%
-        filter(!is.na(Completed))
-    } else
-    {
-      items = items %>%
-        filter(DueDate > today(), DueDate < endDate, is.na(Completed))
+    if (input$evtsFilterType != "All") {
+      items = items %>% 
+        filter(Type == input$evtsFilterType)
     }
     
     items
@@ -107,7 +110,7 @@ server <- shinyServer(function(input, output, session) {
     # TODO Check unsaved
     newid = max(values$msevents$EventId)+1
     values$msevents = rbind(values$msevents, data.frame(EventId = newid, NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment=""))
-    updateRadioButtons(session, "evtsTimeframe", selected="All")
+    updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
     editEvent(newid)
   })
   
@@ -132,7 +135,7 @@ server <- shinyServer(function(input, output, session) {
     ) 
     
     updateTextInput(session, "evtsSearchNHI", value=input$evtsNHI)
-    updateRadioButtons(session, "evtsTimeframe", selected="All")
+    updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
     updateTabsetPanel(session, "evtsViewerTabset", selected="Table")
     
     # TODO

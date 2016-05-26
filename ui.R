@@ -18,7 +18,7 @@ ui <- shinyUI(navbarPage(
         titledPanel("Filter Events",
           textButtonInput("evtsSearchNHI", "NHI", "evtsClearSearchButton", "Clear", placeholder = "Leave blank to search all"),
           radioButtons(
-            "evtsTimeframe",
+            "evtsFilterTimeframe",
             "Timeframe",
             choices = c(
               "All Pending",
@@ -28,6 +28,17 @@ ui <- shinyUI(navbarPage(
               "Overdue",
               "Completed",
               "All"
+            )
+          ),
+          radioButtons(
+            "evtsFilterType",
+            "Event Type",
+            choices = c(
+              "All",
+              "MRI",
+              "JCV",
+              "MSTAC",
+              "Followup"
             )
           )
         )
