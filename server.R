@@ -138,9 +138,6 @@ server <- shinyServer(function(input, output, session) {
     updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
     updateTabsetPanel(session, "evtsViewerTabset", selected="Table")
     
-    # TODO
-    # Send custom event to select newid
-    # session$sendCustomMessage(type="timeline-select", message=list(elid="evtsTimeline", itemid=newid))
     x=getEvents() %>% 
       filter(NHI==input$evtsNHI)
     selectRows(dataTableProxy("evtsTable"), selected=which(x$EventId == newid))
