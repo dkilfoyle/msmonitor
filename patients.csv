@@ -1,2 +1,2 @@
-NHI,Surname, FirstName, Drug, DateStarted
-ABC1234,Smith,Joe,"Dimethyl Fumarate",2016/01/01
+NHI,Surname, FirstName, Drug, DateStarted, JCVStatus
+ABC1234,Smith,Joe,"Dimethyl Fumarate",2016/01/01,Neg

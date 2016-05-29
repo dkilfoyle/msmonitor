@@ -240,6 +240,7 @@ server <- shinyServer(function(input, output, session) {
       updateTextInput(session, "ptsSurname", value = selrow$Surname)
       updateSelectInput(session, "ptsDrug", selected = selrow$Drug)
       updateDateInput(session, "ptsDateStarted", value = selrow$DateStarted)
+      updateRadioButtons(session, "ptsJCV", selected=selrow$JCVStatus)
     }
   })
   
@@ -249,6 +250,7 @@ server <- shinyServer(function(input, output, session) {
     updateTextInput(session, "ptsSurname", value = "click save")
     updateSelectInput(session, "ptsDrug", selected = "")
     updateDateInput(session, "ptsDateStarted", value = "")
+    updateRadioButtons(session, "ptsJCV", selected="Neg")
   })
   
   observeEvent(input$ptsSave, {
@@ -258,7 +260,8 @@ server <- shinyServer(function(input, output, session) {
       Surname = input$ptsSurname,
       FirstName = input$ptsFirstName,
       Drug = input$ptsDrug,
-      DateStarted = input$ptsDateStarted
+      DateStarted = input$ptsDateStarted,
+      JCVStatus = input$ptsJCV
     )
     
     if (length(saveRow) == 0)

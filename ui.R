@@ -116,7 +116,8 @@ ui <- shinyUI(navbarPage(
                   choices = c("Tecfidera", "Natalizumab", "Fingolimod", "Interferon"),
                   selected = ""
                 ),
-                dateInput("ptsDateStarted", "Date Started", "")
+                dateInput("ptsDateStarted", "Date Started", ""),
+                radioButtons("ptsJCV", "JCV Status", choices=c("Pos","Neg"))
               )
             ),
             #action buttons

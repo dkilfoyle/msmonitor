@@ -1,6 +1,6 @@
 "Name","FBC","LFT","JCV","MRI","Clinic","MSTAC","ECG","OCT"
 "Dimethyl Fumarate",3,3,0,0,6,12,0,0
-"NatalizumabNeg",3,3,6,12,6,12,0,0
-"NatalizumabPos",3,3,6,6,6,12,0,0
+"Natalizumab JCPos",3,3,6,12,6,12,0,0
+"Natalizumab JCNeg",3,3,6,6,6,12,0,0
 "Teriflunomide",3,3,6,0,6,12,0,0
 "Fingolimod",3,3,6,0,6,12,6,3
