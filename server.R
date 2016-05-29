@@ -305,6 +305,15 @@ server <- shinyServer(function(input, output, session) {
     DF
   })
   
+  output$ptsDrugsUI = renderUI({
+    selectInput(
+      "ptsDrug",
+      "Drug",
+      choices = getDrugs()$Name, #c("Tecfidera", "Natalizumab", "Fingolimod", "Interferon"),
+      selected = ""
+    )
+  })
+  
   observeEvent(input$drugsSave, {
     write.csv(getDrugs(), file="drugs.csv", row.names=F)
   })

@@ -110,12 +110,8 @@ ui <- shinyUI(navbarPage(
               ),
               column(
                 width = 6,
-                selectInput(
-                  "ptsDrug",
-                  "Drug",
-                  choices = c("Tecfidera", "Natalizumab", "Fingolimod", "Interferon"),
-                  selected = ""
-                ),
+                uiOutput("ptsDrugsUI"),
+
                 dateInput("ptsDateStarted", "Date Started", ""),
                 radioButtons("ptsJCV", "JCV Status", choices=c("Pos","Neg"))
               )
