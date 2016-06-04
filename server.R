@@ -260,6 +260,22 @@ server <- shinyServer(function(input, output, session) {
     updateRadioButtons(session, "ptsJCV", selected="Neg")
   })
   
+  observeEvent(input$ptsDelete, {
+    js_string = 'Shiny.onInputChange("ptsDeleteConfirm",confirm("This will also delete all events associated with this NHI! Are you sure?"));'
+    session$sendCustomMessage(type='jsCode', list(value = js_string))
+  })
+  
+  observeEvent(input$ptsDeleteConfirm, {
+    if(input$ptsDeleteConfirm) {
+      evts = getEvents()
+      evts = evts[-which(evts$NHI == input$ptsNHI), ]
+      values[["msevents"]] = evts
+      pts = getPatients()
+      pts = pts[-which(pts$NHI==input$ptsNHI), ]
+      values[["mspts"]] = pts
+    }
+  })
+  
   observeEvent(input$ptsSave, {
     saveRow = which(getPatients()$NHI == input$ptsNHI)
     newRow = list(

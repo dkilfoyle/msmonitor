@@ -9,13 +9,21 @@ library(listviewer)
 
 source("utils.R")
 
-ui <- shinyUI(navbarPage(
+ui <- shinyUI(
+  navbarPage(
   "MS Monitoring Program",
   
   tabPanel("Events",
     sidebarLayout(
       sidebarPanel(
         includeCSS("www/msmonitor.css"),
+        tags$script(HTML('
+          Shiny.addCustomMessageHandler("jsCode",
+            function(message) {
+              eval(message.value);
+            }
+          );'
+        )),
         titledPanel("Filter Events",
           textButtonInput("evtsSearchNHI", "NHI", "evtsClearSearchButton", "Clear", placeholder = "Leave blank to search all"),
           radioButtons(
