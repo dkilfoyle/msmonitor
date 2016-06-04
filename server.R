@@ -1,5 +1,6 @@
 library(shiny)
 library(DT)
+library(yaml)
 
 server <- shinyServer(function(input, output, session) {
   
@@ -7,7 +8,7 @@ server <- shinyServer(function(input, output, session) {
   
   getEvents = reactive({
     if (is.null(values[["msevents"]])) {
-      DF = read.csv("events.csv", stringsAsFactors = F)
+      DF = read.csv("data/events.csv", stringsAsFactors = F)
       DF$DueDate = ymd(DF$DueDate)
       DF$Completed = ymd(DF$Completed)
       DF$Type = as.factor(DF$Type)
@@ -106,33 +107,39 @@ server <- shinyServer(function(input, output, session) {
     updateDateInput(session, "evtsCompleted", value = today())
   })
   
+  newEvent = function(NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment="") {
+    newid = max(values$msevents$EventId)+1
+    values$msevents = rbind(values$msevents, data.frame(EventId = newid, NHI=NHI, Type=Type, Number=Number, DueDate=DueDate, Completed=Completed, Result=Result, Comment=Comment))
+    return(newid)
+  }
+  
   observeEvent(input$evtsNewButton, {
     # TODO Check unsaved
-    newid = max(values$msevents$EventId)+1
-    values$msevents = rbind(values$msevents, data.frame(EventId = newid, NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment=""))
+    newid=newEvent() 
     updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
     editEvent(newid)
   })
   
   observeEvent(input$evtsRepeatButton, {
     # TODO Check unsaved
-    newid = max(values$msevents$EventId)+1
     
     pt = getPatients() %>% 
       filter(NHI == input$evtsNHI) # get the patient associated with this event
-    cat(str(pt))
     drug = getDrugs() %>%  
       filter(Name == pt$Drug) # get the drug associated with this patient
     
-    cat(str(drug))
-    
+    stop() # need to implement getDrugEventTime
     newduedate = input$evtsDueDate + months(drug[1, input$evtsType])
-    cat(newduedate)
-
-    values$msevents = rbind(
-      values$msevents,
-      data.frame(EventId = newid, NHI=input$evtsNHI, Type=input$evtsType, Number=as.numeric(input$evtsNumber)+1, DueDate=newduedate, Completed=ymd(""), Result="", Comment="")
-    ) 
+    
+    newid = newEvent(
+      NHI=input$evtsNHI,
+      Type=input$evtsType,
+      Number=as.numeric(input$evtsNumber)+1,
+      DueDate=newduedate,
+      Completed=ymd(""),
+      Result="", 
+      Comment=""
+    )
     
     updateTextInput(session, "evtsSearchNHI", value=input$evtsNHI)
     updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
@@ -152,7 +159,7 @@ server <- shinyServer(function(input, output, session) {
     values$msevents[saveRow, "Completed"] = input$evtsCompleted
     values$msevents[saveRow, "Comment"] = input$evtsComment
     values$msevents[saveRow, "NHI"] = input$evtsNHI
-    write.csv(getEvents(), file="events.csv", row.names=F)
+    write.csv(getEvents(), file="data/events.csv", row.names=F)
   })
   
   output$evtsTimeline <- renderTimelinevis({
@@ -211,7 +218,7 @@ server <- shinyServer(function(input, output, session) {
   
   getPatients = reactive({
     if (is.null(values[["mspts"]])) {
-        DF = read.csv("patients.csv", stringsAsFactors = F)
+        DF = read.csv("data/patients.csv", stringsAsFactors = F)
         DF$DateStarted = ymd(DF$DateStarted)
       }
       else
@@ -270,7 +277,29 @@ server <- shinyServer(function(input, output, session) {
     else
       values$mspts[saveRow,] = newRow
     
-    write.csv(getPatients(), file="patients.csv", row.names=F)
+    write.csv(getPatients(), file="data/patients.csv", row.names=F)
+  })
+  
+  observeEvent(input$ptsGenerateInitiationEvents, {
+    # TODO: check is this pt saveed yet
+    x = getDrugs()[[input$ptsDrug]]
+    if (!is.null(x)) {
+      sapply(names(x$Initial), function (xx) {
+        if (xx == "JCPos") 
+          {}
+        else if (xx == "JCNeg")
+          {}
+        else 
+          {
+            newEvent(
+              NHI=input$ptsNHI,
+              Type=xx,
+              Number=1,
+              DueDate = today() %m+% months(x$Initial[[xx]])
+            )
+          }
+      })
+    }
   })
   
   output$ptsTable = DT::renderDataTable(
@@ -291,12 +320,15 @@ server <- shinyServer(function(input, output, session) {
   
   
   getDrugs = reactive({
-    if (!is.null(input$drugsTable)) {
-      DF = hot_to_r(input$drugsTable)
-      values$msdrugs=DF
-    }
-    else if (is.null(values[["msdrugs"]])) {
-      DF = read.csv("drugs.csv", stringsAsFactors = F)
+    # if (!is.null(input$drugsTable)) {
+    #   DF = hot_to_r(input$drugsTable)
+    #   values$msdrugs=DF
+    # }
+    # else if (is.null(values[["msdrugs"]])) {
+    #   DF = read.csv("drugs.csv", stringsAsFactors = F)
+    # }
+    if (is.null(values[["msdrugs"]])) {
+      DF = yaml.load_file("data/drugs.yml")
     }
     else
       DF = values[["msdrugs"]]
@@ -309,7 +341,7 @@ server <- shinyServer(function(input, output, session) {
     selectInput(
       "ptsDrug",
       "Drug",
-      choices = getDrugs()$Name, #c("Tecfidera", "Natalizumab", "Fingolimod", "Interferon"),
+      choices = names(getDrugs()), #$Name, #c("Tecfidera", "Natalizumab", "Fingolimod", "Interferon"),
       selected = ""
     )
   })
@@ -318,8 +350,12 @@ server <- shinyServer(function(input, output, session) {
     write.csv(getDrugs(), file="drugs.csv", row.names=F)
   })
   
-  output$drugsTable <- renderRHandsontable({
-    rhandsontable(getDrugs(), rowHeaders=NULL)
+  # output$drugsTable <- renderRHandsontable({
+  #   rhandsontable(getDrugs(), rowHeaders=NULL)
+  # })
+  
+  output$drugsList = renderJsonedit({
+    jsonedit(getDrugs())
   })
   
 })

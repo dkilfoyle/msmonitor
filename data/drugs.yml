@@ -1,0 +1,27 @@
+Natalizumab:
+  Initial:
+    MSTAC-Application: 0
+    Baseline-Bloods: 0
+    Nurse-Clinic: 1
+    JCV: 6
+    JCPos:
+      MRI: 6
+    JCNeg:
+      MRI: 12
+    MSTAC-Renew: 12
+  Maintenance:
+    JCV: 6
+    MSTAC-Renew: 12
+    JCPos:
+      MRI: 12
+    JCNeg:
+      MRI: 6
+Dimethyl-Fumarate:
+  Initial:
+    MSTAC-Application: 0
+    Baseline-Bloods: 0
+    MSTAC-Renew: 12
+    FBC: 3
+  Maintenance:
+    FBC: 3
+    MSTAC-Renew: 12

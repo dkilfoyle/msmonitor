@@ -5,6 +5,7 @@ library(lubridate)
 library(stringr)
 library(shinyBS)
 library(timelinevis)
+library(listviewer)
 
 source("utils.R")
 
@@ -119,7 +120,8 @@ ui <- shinyUI(navbarPage(
             #action buttons
             actionButton("ptsSave", "Save"),
             actionButton("ptsNew", "New"),
-            actionButton("ptsDelete", "Delete")
+            actionButton("ptsDelete", "Delete"),
+            actionButton("ptsGenerateInitiationEvents","Generate Initiation Events")
           ),
           id = "ptsCollapse",
           multiple = T
@@ -138,7 +140,8 @@ ui <- shinyUI(navbarPage(
       ),
       mainPanel(
         helpText("Recommended interval in months for each test"),
-        rHandsontableOutput("drugsTable")
+        # rHandsontableOutput("drugsTable")
+        jsoneditOutput("drugsList")
       )
     ))
 ))
