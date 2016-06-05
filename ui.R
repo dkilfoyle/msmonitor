@@ -58,15 +58,15 @@ ui <- shinyUI(
             "Selected Event",
             fluidRow(
               column(width=4,
-                hiddenTextInput("evtsId", "Id"),
+                hiddenTextInput("evtsId", "Id", value=-1),
                 selectInput("evtsType", "Type", choices=c("LFT","MRI","JCV","FBC"), selected=NULL),
-                textInput("evtsNumber", "Number", ""),
-                textareaInput("evtsComment", "Comment")
+                textInput("evtsNumber", "Number", value=""),
+                textareaInput("evtsComment", "Comment", value="")
               ),
               column(width=4,
                 dateInput("evtsDueDate", "Due Date", ""),
                 dateInput("evtsCompleted", "Date Completed", ""),
-                textareaInput("evtsResult", "Result")
+                textareaInput("evtsResult", "Result", value="")
               ),
               column(width=4,
                 textInput("evtsNHI", "NHI", ""),

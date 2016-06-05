@@ -1,6 +1,7 @@
 library(shiny)
 library(DT)
 library(yaml)
+library(shinyjs)
 
 server <- shinyServer(function(input, output, session) {
   
@@ -62,7 +63,6 @@ server <- shinyServer(function(input, output, session) {
   })
   
   editEvent = function(id) {
-    cat("editing ", id, "\n")
     updateCollapse(session, "evtsCollapse", open = "Selected Event")
     se = getEvents()[getEvents()$EventId == id,]
     updateTextInput(session, "evtsId", value = id)
@@ -113,11 +113,21 @@ server <- shinyServer(function(input, output, session) {
     return(newid)
   }
   
+  blankEvent = function(NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment="") {
+    updateTextInput(session, "evtsId", value = -1)
+    updateTextInput(session, "evtsType", value = Type)
+    updateTextInput(session, "evtsNumber", value = Number)
+    updateTextInput(session, "evtsResult", value = Result)
+    updateTextInput(session, "evtsComment", value = Comment)
+    updateTextInput(session, "evtsNHI", value=NHI)
+    updateTextInput(session, "evtsDueDate", value="")
+    js_string = '$("#evtsDueDate input").eq(0).val("").datepicker("update"); $("#evtsCompleted input").eq(0).val("").datepicker("update");'
+    session$sendCustomMessage(type='jsCode', list(value = js_string))
+  }
+  
   observeEvent(input$evtsNewButton, {
-    # TODO Check unsaved
-    newid=newEvent() 
-    updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
-    editEvent(newid)
+    # updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
+    blankEvent(NHI=input$evtsSearchNHI)
   })
   
   observeEvent(input$evtsRepeatButton, {
@@ -151,7 +161,14 @@ server <- shinyServer(function(input, output, session) {
   })
 
   observeEvent(input$evtsSaveButton, {
-    saveRow = which(values$msevents$EventId == input$evtsId)
+    
+    if (input$evtsId == -1) {
+      newid = newEvent()
+      saveRow = which(values$msevents$EventId == newid) # generate a new event id
+    }
+    else
+      saveRow = which(values$msevents$EventId == input$evtsId)
+
     values$msevents[saveRow, "DueDate"] = input$evtsDueDate
     values$msevents[saveRow, "Type"] = input$evtsType
     values$msevents[saveRow, "Number"] = input$evtsNumber
@@ -160,6 +177,14 @@ server <- shinyServer(function(input, output, session) {
     values$msevents[saveRow, "Comment"] = input$evtsComment
     values$msevents[saveRow, "NHI"] = input$evtsNHI
     write.csv(getEvents(), file="data/events.csv", row.names=F)
+  })
+  
+  observeEvent(input$evtsDeleteButton, {
+    evts = getEvents()
+    evts = evts[-which(evts$EventId == input$evtsId), ]
+    values[["msevents"]] = evts
+    write.csv(getEvents(), file="data/events.csv", row.names=F)
+    blankEvent()
   })
   
   output$evtsTimeline <- renderTimelinevis({
