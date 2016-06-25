@@ -388,7 +388,16 @@ server <- shinyServer(function(input, output, session) {
   })
   
   observeEvent(input$drugsSave, {
-    write.csv(getDrugs(), file="drugs.csv", row.names=F)
+    
+   stop("implement")
+    
+    # make jsonEditorChangeEvent to intput$drugsTable - see handonstbale for how
+    # below will only work if there is a change
+    
+    save(as.yaml(input$jsonEditorChangeEvent), file="drugs2.yml")
+    
+    
+    # write.csv(getDrugs(), file="drugs.csv", row.names=F)
   })
   
   # output$drugsTable <- renderRHandsontable({
@@ -396,7 +405,9 @@ server <- shinyServer(function(input, output, session) {
   # })
   
   output$drugsList = renderJsonedit({
-    jsonedit(getDrugs())
+    jsonedit(getDrugs(), "change" = htmlwidgets::JS('function(){
+        Shiny.onInputChange("jsonEditorChangeEvent", 
+          {id: event.currentTarget.parentNode.id, data:event.currentTarget.parentNode.editor.get()});}'))
   })
   
 })
