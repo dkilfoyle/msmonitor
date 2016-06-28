@@ -321,24 +321,32 @@ server <- shinyServer(function(input, output, session) {
     write.csv(getPatients(), file="data/patients.csv", row.names=F)
   })
   
+  initiationEvent = function(type, emonths) {
+    newEvent(
+      NHI=input$ptsNHI,
+      Type=type,
+      Number=1,
+      DueDate = today() %m+% months(emonths)
+    )
+  }
+  
   observeEvent(input$ptsGenerateInitiationEvents, {
     # TODO: check is this pt saveed yet
-    x = getDrugs()[[input$ptsDrug]]
-    if (!is.null(x)) {
-      sapply(names(x$Initial), function (xx) {
-        if (xx == "JCPos") 
-          {}
-        else if (xx == "JCNeg")
-          {}
-        else 
-          {
-            newEvent(
-              NHI=input$ptsNHI,
-              Type=xx,
-              Number=1,
-              DueDate = today() %m+% months(x$Initial[[xx]])
-            )
+    drug = getDrugs()[[input$ptsDrug]]
+    cat(input$ptsJCV)
+    if (!is.null(drug)) {
+      sapply(names(drug$Initial), function (event) {
+        if (event == "JCPos")
+          if (input$ptsJCV == "Pos") {
+              sapply(names(drug$Initial$JCPos), function(event2) { initiationEvent(event2, drug$Initial$JCPos[[event2]])})
           }
+        else if (event == "JCNeg")
+          if (input$ptsJCV == "Neg") {
+            sapply(names(drug$Initial$JCNeg), function(event2) { initiationEvent(event2, drug$Initial$JCNeg[[event2]])})
+          }
+        else {
+          initiationEvent(event, drug$Initial[[event]])
+        }
       })
     }
   })
