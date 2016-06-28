@@ -10,8 +10,8 @@ server <- shinyServer(function(input, output, session) {
   getEvents = reactive({
     if (is.null(values[["msevents"]])) {
       DF = read.csv("data/events.csv", stringsAsFactors = F)
-      DF$DueDate = ymd(DF$DueDate)
-      DF$Completed = ymd(DF$Completed)
+      DF$DueDate = dmy(DF$DueDate)
+      DF$Completed = dmy(DF$Completed)
       DF$Type = as.factor(DF$Type)
     }
     else
@@ -33,11 +33,11 @@ server <- shinyServer(function(input, output, session) {
     if (input$evtsFilterTimeframe != "All") {
       endDate = switch(
         input$evtsFilterTimeframe,
-        "All Pending" = ymd("2100/01/01"),
+        "All Pending" = dmy("01/01/2100"),
         "This week" = today() + weeks(1),
         "Next 6 weeks" = today() + weeks(6),
         "Next 3 months" = today() + months(3),
-        ymd("2100/01/01")
+        dmy("01/01/2100")
       )
       endDate = as_date(endDate)
       
@@ -107,13 +107,13 @@ server <- shinyServer(function(input, output, session) {
     updateDateInput(session, "evtsCompleted", value = today())
   })
   
-  newEvent = function(NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment="") {
+  newEvent = function(NHI="", Type="", Number=1, DueDate=dmy(""), Completed=dmy(""), Result="", Comment="") {
     newid = max(values$msevents$EventId)+1
     values$msevents = rbind(values$msevents, data.frame(EventId = newid, NHI=NHI, Type=Type, Number=Number, DueDate=DueDate, Completed=Completed, Result=Result, Comment=Comment))
     return(newid)
   }
   
-  blankEvent = function(NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment="") {
+  blankEvent = function(NHI="", Type="", Number=1, DueDate=dmy(""), Completed=dmy(""), Result="", Comment="") {
     updateTextInput(session, "evtsId", value = -1)
     updateTextInput(session, "evtsType", value = Type)
     updateTextInput(session, "evtsNumber", value = Number)
@@ -146,7 +146,7 @@ server <- shinyServer(function(input, output, session) {
       Type=input$evtsType,
       Number=as.numeric(input$evtsNumber)+1,
       DueDate=newduedate,
-      Completed=ymd(""),
+      Completed=dmy(""),
       Result="", 
       Comment=""
     )
@@ -207,7 +207,7 @@ server <- shinyServer(function(input, output, session) {
     groups = data.frame(
       id = unique(items$NHI),
       content = unique(items$NHI),
-      title = getPatients()$Surname[getPatients()$NHI == unique(items$NHI)]
+      title = getPatients()$Surname[getPatients()$NHI %in% unique(items$NHI)]
     )
     
     timelinevis(
@@ -244,7 +244,7 @@ server <- shinyServer(function(input, output, session) {
   getPatients = reactive({
     if (is.null(values[["mspts"]])) {
         DF = read.csv("data/patients.csv", stringsAsFactors = F)
-        DF$DateStarted = ymd(DF$DateStarted)
+        DF$DateStarted = dmy(DF$DateStarted)
       }
       else
         DF = values[["mspts"]]

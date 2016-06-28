@@ -59,7 +59,7 @@ ui <- shinyUI(
             fluidRow(
               column(width=4,
                 hiddenTextInput("evtsId", "Id", value=-1),
-                selectInput("evtsType", "Type", choices=c("LFT","MRI","JCV","FBC"), selected=NULL),
+                selectInput("evtsType", "Type", choices=c("LFT","MRI","JCV","FBC","MSTAC"), selected=NULL),
                 textInput("evtsNumber", "Number", value=""),
                 textareaInput("evtsComment", "Comment", value="")
               ),
