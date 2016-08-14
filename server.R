@@ -276,7 +276,7 @@ server <- shinyServer(function(input, output, session) {
       updateTextInput(session, "ptsNHI", value = selrow$NHI)
       updateTextInput(session, "ptsFirstName", value = selrow$FirstName)
       updateTextInput(session, "ptsSurname", value = selrow$Surname)
-      updateSelectizeInput(session, "ptsDrug", selected = selrow$Drug)
+      updateSelectInput(session, "ptsDrug", selected = selrow$Drug, choices = names(getDrugs()))
       updateDateInput(session, "ptsDateStarted", value = selrow$DateStarted)
       updateRadioButtons(session, "ptsJCV", selected=selrow$JCVStatus)
     }
@@ -286,7 +286,7 @@ server <- shinyServer(function(input, output, session) {
     updateTextInput(session, "ptsNHI", value = "Enter details")
     updateTextInput(session, "ptsFirstName", value = "then")
     updateTextInput(session, "ptsSurname", value = "click save")
-    updateSelectInput(session, "ptsDrug", selected = "")
+    updateSelectInput(session, "ptsDrug", selected = "", choices = names(getDrugs()))
     updateDateInput(session, "ptsDateStarted", value = "")
     updateRadioButtons(session, "ptsJCV", selected="Neg")
   })
@@ -398,14 +398,14 @@ server <- shinyServer(function(input, output, session) {
     DF
   })
   
-  output$ptsDrugsUI = renderUI({
-    selectInput(
-      "ptsDrug",
-      "Drug",
-      choices = names(getDrugs()), #$Name, #c("Tecfidera", "Natalizumab", "Fingolimod", "Interferon"),
-      selected = ""
-    )
-  })
+  # output$ptsDrugsUI = renderUI({
+  #   selectInput(
+  #     "ptsDrug",
+  #     "Drug",
+  #     choices = names(getDrugs()), #$Name, #c("Tecfidera", "Natalizumab", "Fingolimod", "Interferon"),
+  #     selected = ""
+  #   )
+  # })
   
   observeEvent(input$drugsSave, {
     

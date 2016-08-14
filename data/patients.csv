@@ -1,12 +1,3 @@
-<<<<<<< HEAD
-NHI,Surname,FirstName,Drug,DateStarted,JCVStatus
-ETD6540,McMillan,Chloe,Natalizumab,1/01/2016,Neg
-GGH9955,Winter,Julie,Natalizumab,31/05/2016,Neg
-GJF3017,Wardle,Sarah-Jane,Tecfidera,,Neg
-BHJ2189,Beaton,Gabrielle,,,
-HJP5009,Mohi,Karla,,,
-DFH6900,Stevens,Mark,Betainterferon1A,15/09/2011,
-=======
 "NHI","Surname","FirstName","Drug","DateStarted","JCVStatus"
 "ABC1234","Smith","Joe","Dimethyl-Fumarate",2016-01-01,"Neg"
 "ABC7892","Doe","John","Natalizumab",2016-05-31,"Neg"
@@ -15,4 +6,3 @@ DFH6900,Stevens,Mark,Betainterferon1A,15/09/2011,
 "ERT5676","Doo","Scooby","Dimethyl-Fumarate",2016-03-01,"Neg"
 "JKL8765","Mouse","Mini","Natalizumab",2016-02-05,"Neg"
 "DFG4543","Man","Bat","Dimethyl-Fumarate",2016-01-15,"Neg"
->>>>>>> 0bdfb2de5bd71702bce3a8e8a136026057456d4f

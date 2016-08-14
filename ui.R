@@ -124,8 +124,7 @@ ui <- shinyUI(
               ),
               column(
                 width = 6,
-                uiOutput("ptsDrugsUI"),
-
+                selectInput("ptsDrug","Drug",choices=""),
                 dateInput("ptsDateStarted", "Date Started", ""),
                 radioButtons("ptsJCV", "JCV Status", choices=c("Pos","Neg"), inline=T)
               )
