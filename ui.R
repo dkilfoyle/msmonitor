@@ -109,7 +109,24 @@ ui <- shinyUI(
     sidebarLayout(
       sidebarPanel(
         titledPanel("Filter Patients",
-          textInput("ptsSearchNHI", "NHI", "", placeholder = "Leave blank to search all"))
+          textInput("ptsSearchNHI", "NHI", "", placeholder = "Leave blank to search all"),
+          radioButtons(
+            "ptsSearchJCV",
+            "JCV Status",
+            choices = c(
+              "All",
+              "Pos",
+              "Neg"
+            )
+          ),
+          radioButtons(
+            "ptsSearchDrug",
+            "Drug",
+            choices = c(
+              "All",
+              "Natalizumab"
+            )
+          ))
       ), # end sidebarPanel
       mainPanel(
         bsCollapse(

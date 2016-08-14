@@ -271,6 +271,17 @@ server <- shinyServer(function(input, output, session) {
       pts = pts %>%
         filter(NHI == nhi)
     }
+    
+    if (input$ptsSearchJCV != "All") {
+      pts = pts %>% 
+        filter(JCVStatus == input$ptsSearchJCV)
+    }
+    
+    if (input$ptsSearchDrug == "Natalizumab") {
+      pts = pts %>% 
+        filter(Drug == input$ptsSearchDrug)
+    }
+    
     pts
   })
   
