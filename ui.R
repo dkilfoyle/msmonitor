@@ -69,17 +69,17 @@ ui <- shinyUI(
                 textareaInput("evtsResult", "Result", value="")
               ),
               column(width=4,
-                textInput("evtsNHI", "NHI", ""),
-                # titledPanel("Patient Info",
-                #   uiOutput("evtsInfo")
-                # ),
+                hiddenTextInput("evtsNHI", "NHI", ""),
+                titledPanel("Patient Info",
+                  uiOutput("evtsInfo")
+                ),
                 div(
                   class = "btn-group-vertical",
                   role = "group",
                   style = "width:100%",
                   actionButton("evtsCompleteButton", "Mark as Completed"),
                   actionButton("evtsRepeatButton", "Repeat Event"),
-                  actionButton("evtsNewButton", "New Blank Event"),
+                  # actionButton("evtsNewButton", "New Blank Event"),
                   actionButton("evtsDeleteButton", "Delete Event"),
                   actionButton("evtsSaveButton", "Save Changes")
                 )

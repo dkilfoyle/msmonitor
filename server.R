@@ -67,6 +67,12 @@ server <- shinyServer(function(input, output, session) {
     max(getEvents() %>% filter(NHI == input$evtsNHI, type == input$evtsType))$Number + 1
   })
   
+  observe({
+    x = getEvents() %>% filter(NHI == input$evtsNHI, Type == input$evtsType)
+    if(nrow(x))
+      updateTextInput(session, "evtsNumber", value=(max(x$Number,na.rm=T) + 1))
+  })
+  
   editEvent = function(id) {
     updateCollapse(session, "evtsCollapse", open = "Selected Event")
     se = getEvents()[getEvents()$EventId == id,]
@@ -78,7 +84,7 @@ server <- shinyServer(function(input, output, session) {
     updateTextInput(session, "evtsComment", value = se$Comment)
     updateTextInput(session, "evtsCompleted", value = se$Completed)
     updateTextInput(session, "evtsNHI", value=se$NHI)
-    # output$evtsInfo = renderUI(tagList(h3(se$NHI),p(values$mspts$Surname[values$mspts$NHI==se$NHI])))
+    output$evtsInfo = renderUI(tagList(h3(se$NHI),p(values$mspts$Surname[values$mspts$NHI==se$NHI])))
   }
   
   observe({
