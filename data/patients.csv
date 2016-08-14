@@ -1,3 +1,7 @@
-"NHI","Surname","FirstName","Drug","DateStarted","JCVStatus"
-"ABC1234","Smith","Joe","Dimethyl Fumarate",2016-01-01,"Neg"
-"ABC7892","Smith","John","Natalizumab",2016-05-31,"Neg"
+NHI,Surname,FirstName,Drug,DateStarted,JCVStatus
+ETD6540,McMillan,Chloe,Natalizumab,1/01/2016,Neg
+GGH9955,Winter,Julie,Natalizumab,31/05/2016,Neg
+GJF3017,Wardle,Sarah-Jane,Tecfidera,,Neg
+BHJ2189,Beaton,Gabrielle,,,
+HJP5009,Mohi,Karla,,,
+DFH6900,Stevens,Mark,Betainterferon1A,15/09/2011,
