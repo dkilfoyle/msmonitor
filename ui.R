@@ -12,6 +12,10 @@ source("utils.R")
 ui <- shinyUI(
   navbarPage(
   "MS Monitoring Program",
+    
+  tabPanel("Info",
+    wellPanel(
+    includeMarkdown("info.md"))),
   
   tabPanel("Events",
     sidebarLayout(
