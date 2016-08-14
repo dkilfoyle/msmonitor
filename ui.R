@@ -99,6 +99,11 @@ ui <- shinyUI(
             DT::dataTableOutput("evtsTable")),
           id="evtsViewerTabset")) # end mainpanel
     )), # end tabpanel Events
+  
+  ## =============================
+  ## Patients
+  ## =============================
+  
   tabPanel(
     "Patients",
     sidebarLayout(
@@ -122,14 +127,15 @@ ui <- shinyUI(
                 uiOutput("ptsDrugsUI"),
 
                 dateInput("ptsDateStarted", "Date Started", ""),
-                radioButtons("ptsJCV", "JCV Status", choices=c("Pos","Neg"))
+                radioButtons("ptsJCV", "JCV Status", choices=c("Pos","Neg"), inline=T)
               )
             ),
             #action buttons
             actionButton("ptsSave", "Save"),
             actionButton("ptsNew", "New"),
             actionButton("ptsDelete", "Delete"),
-            actionButton("ptsGenerateInitiationEvents","Generate Initiation Events")
+            actionButton("ptsGenerateInitiationEvents","Generate Initiation Events"),
+            actionButton("ptsNewEvent","Add New Event")
           ),
           id = "ptsCollapse",
           multiple = T
@@ -151,5 +157,6 @@ ui <- shinyUI(
         # rHandsontableOutput("drugsTable")
         jsoneditOutput("drugsList")
       )
-    ))
+    )),
+  id="mainTabPanel"
 ))

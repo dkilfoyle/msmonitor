@@ -10,8 +10,8 @@ server <- shinyServer(function(input, output, session) {
   getEvents = reactive({
     if (is.null(values[["msevents"]])) {
       DF = read.csv("data/events.csv", stringsAsFactors = F)
-      DF$DueDate = dmy(DF$DueDate)
-      DF$Completed = dmy(DF$Completed)
+      DF$DueDate = ymd(DF$DueDate)
+      DF$Completed = ymd(DF$Completed)
       DF$Type = as.factor(DF$Type)
     }
     else
@@ -33,11 +33,11 @@ server <- shinyServer(function(input, output, session) {
     if (input$evtsFilterTimeframe != "All") {
       endDate = switch(
         input$evtsFilterTimeframe,
-        "All Pending" = dmy("01/01/2100"),
+        "All Pending" = ymd("2100/01/01"),
         "This week" = today() + weeks(1),
         "Next 6 weeks" = today() + weeks(6),
         "Next 3 months" = today() + months(3),
-        dmy("01/01/2100")
+        ymd("2100/01/01")
       )
       endDate = as_date(endDate)
       
@@ -60,6 +60,11 @@ server <- shinyServer(function(input, output, session) {
     }
     
     items
+  })
+  
+  # TODO: use this - probably side button on textbox "Auto"
+  getEventNumber = reactive({
+    max(getEvents() %>% filter(NHI == input$evtsNHI, type == input$evtsType))$Number + 1
   })
   
   editEvent = function(id) {
@@ -107,13 +112,13 @@ server <- shinyServer(function(input, output, session) {
     updateDateInput(session, "evtsCompleted", value = today())
   })
   
-  newEvent = function(NHI="", Type="", Number=1, DueDate=dmy(""), Completed=dmy(""), Result="", Comment="") {
+  newEvent = function(NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment="") {
     newid = max(values$msevents$EventId)+1
     values$msevents = rbind(values$msevents, data.frame(EventId = newid, NHI=NHI, Type=Type, Number=Number, DueDate=DueDate, Completed=Completed, Result=Result, Comment=Comment))
     return(newid)
   }
   
-  blankEvent = function(NHI="", Type="", Number=1, DueDate=dmy(""), Completed=dmy(""), Result="", Comment="") {
+  blankEvent = function(NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment="") {
     updateTextInput(session, "evtsId", value = -1)
     updateTextInput(session, "evtsType", value = Type)
     updateTextInput(session, "evtsNumber", value = Number)
@@ -146,7 +151,7 @@ server <- shinyServer(function(input, output, session) {
       Type=input$evtsType,
       Number=as.numeric(input$evtsNumber)+1,
       DueDate=newduedate,
-      Completed=dmy(""),
+      Completed=ymd(""),
       Result="", 
       Comment=""
     )
@@ -244,7 +249,7 @@ server <- shinyServer(function(input, output, session) {
   getPatients = reactive({
     if (is.null(values[["mspts"]])) {
         DF = read.csv("data/patients.csv", stringsAsFactors = F)
-        DF$DateStarted = dmy(DF$DateStarted)
+        DF$DateStarted = ymd(DF$DateStarted)
       }
       else
         DF = values[["mspts"]]
@@ -264,13 +269,14 @@ server <- shinyServer(function(input, output, session) {
   })
   
   observe({
+    
     if (length(input$ptsTable_rows_selected) > 0) {
       updateCollapse(session, "ptsCollapse", open = "Selected Patient")
       selrow = getFilteredPatients()[input$ptsTable_rows_selected,]
       updateTextInput(session, "ptsNHI", value = selrow$NHI)
       updateTextInput(session, "ptsFirstName", value = selrow$FirstName)
       updateTextInput(session, "ptsSurname", value = selrow$Surname)
-      updateSelectInput(session, "ptsDrug", selected = selrow$Drug)
+      updateSelectizeInput(session, "ptsDrug", selected = selrow$Drug)
       updateDateInput(session, "ptsDateStarted", value = selrow$DateStarted)
       updateRadioButtons(session, "ptsJCV", selected=selrow$JCVStatus)
     }
@@ -349,6 +355,12 @@ server <- shinyServer(function(input, output, session) {
         }
       })
     }
+  })
+  
+  observeEvent(input$ptsNewEvent, {
+    updateTabsetPanel(session, "mainTabPanel","Events")
+    updateCollapse(session, "evtsCollapse", open = "Selected Event")
+    blankEvent(NHI=input$ptsNHI)
   })
   
   output$ptsTable = DT::renderDataTable(
