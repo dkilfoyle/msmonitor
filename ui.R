@@ -64,7 +64,7 @@ ui <- shinyUI(
               column(width=4,
                 hiddenTextInput("evtsId", "Id", value=-1),
                 selectInput("evtsType", "Type", choices=c("LFT","MRI","JCV","FBC","MSTAC"), selected=NULL),
-                textInput("evtsNumber", "Number", value=""),
+                textButtonInput("evtsNumber", "Number", "evtsNumberCalc", "Calc", value=""),
                 textareaInput("evtsComment", "Comment", value="")
               ),
               column(width=4,

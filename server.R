@@ -62,12 +62,7 @@ server <- shinyServer(function(input, output, session) {
     items
   })
   
-  # TODO: use this - probably side button on textbox "Auto"
-  getEventNumber = reactive({
-    max(getEvents() %>% filter(NHI == input$evtsNHI, type == input$evtsType))$Number + 1
-  })
-  
-  observe({
+  observeEvent(input$evtsNumberCalc, {
     x = getEvents() %>% filter(NHI == input$evtsNHI, Type == input$evtsType)
     if(nrow(x))
       updateTextInput(session, "evtsNumber", value=(max(x$Number,na.rm=T) + 1))
@@ -75,7 +70,7 @@ server <- shinyServer(function(input, output, session) {
   
   editEvent = function(id) {
     updateCollapse(session, "evtsCollapse", open = "Selected Event")
-    se = getEvents()[getEvents()$EventId == id,]
+    se = getEvents() %>% filter(EventId==id)
     updateTextInput(session, "evtsId", value = id)
     updateTextInput(session, "evtsDueDate", value = se$DueDate)
     updateTextInput(session, "evtsType", value = se$Type)
