@@ -74,7 +74,7 @@ ui <- shinyUI(
               ),
               column(width=4,
                 hiddenTextInput("evtsNHI", "NHI", ""),
-                titledPanel("Patient Info",
+                titledPanel("Patient Info", 
                   uiOutput("evtsInfo")
                 ),
                 div(
@@ -83,7 +83,7 @@ ui <- shinyUI(
                   style = "width:100%",
                   actionButton("evtsCompleteButton", "Mark as Completed"),
                   actionButton("evtsRepeatButton", "Repeat Event"),
-                  # actionButton("evtsNewButton", "New Blank Event"),
+                  actionButton("evtsNewButton", "New Blank Event"),
                   actionButton("evtsDeleteButton", "Delete Event"),
                   actionButton("evtsSaveButton", "Save Changes")
                 )

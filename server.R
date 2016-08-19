@@ -79,8 +79,14 @@ server <- shinyServer(function(input, output, session) {
     updateTextInput(session, "evtsComment", value = se$Comment)
     updateTextInput(session, "evtsCompleted", value = se$Completed)
     updateTextInput(session, "evtsNHI", value=se$NHI)
-    output$evtsInfo = renderUI(tagList(h3(se$NHI),p(values$mspts$Surname[values$mspts$NHI==se$NHI])))
   }
+  
+  observe({
+    output$evtsInfo = renderUI(tagList(
+      h3(input$evtsNHI, style="margin-top:0px"),
+      p(values$mspts$Surname[values$mspts$NHI==input$evtsNHI],style="margin-bottom:0px")
+    ))
+  })
   
   observe({
     x = input$tlMoveEvent
