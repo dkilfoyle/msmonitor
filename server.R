@@ -133,7 +133,7 @@ server <- shinyServer(function(input, output, session) {
   
   observeEvent(input$evtsNewButton, {
     # updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
-    blankEvent(NHI=input$evtsSearchNHI)
+    blankEvent(NHI=input$evtsNHI)
   })
   
   observeEvent(input$evtsRepeatButton, {
