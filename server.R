@@ -81,6 +81,7 @@ server <- shinyServer(function(input, output, session) {
     updateTextInput(session, "evtsNHI", value=se$NHI)
   }
   
+  # update the NHI sticker
   observe({
     output$evtsInfo = renderUI(tagList(
       h3(input$evtsNHI, style="margin-top:0px"),
@@ -90,6 +91,7 @@ server <- shinyServer(function(input, output, session) {
   
   observe({
     x = input$tlMoveEvent
+    req(x)
     updateDateInput(session, "evtsDueDate", value = x$item$start)
   })
   
@@ -192,6 +194,18 @@ server <- shinyServer(function(input, output, session) {
   })
   
   observeEvent(input$evtsDeleteButton, {
+    showModal(modalDialog(
+      title = "Delete Event",
+      "Are you sure?",
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("evtsDeleteOK", "OK")
+      )
+    ))
+  })
+  
+  observeEvent(input$evtsDeleteOK, {
+    removeModal()
     evts = getEvents()
     evts = evts[-which(evts$EventId == input$evtsId), ]
     values[["msevents"]] = evts
