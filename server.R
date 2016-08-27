@@ -6,6 +6,8 @@ library(sweetalertR)
 
 server <- shinyServer(function(input, output, session) {
   
+  cat("Shiny server starting...\n")
+  
   values = reactiveValues()
   values$unsavedEventStatus = "No"
 
@@ -23,8 +25,11 @@ server <- shinyServer(function(input, output, session) {
     DF
   })
   
+  # create a new event record in values, usually activated by save button
   createNewEvent = function(NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment="") {
+    req(NHI,Type)
     newid = max(values$msevents$EventId)+1
+    cat("Create new event: ",newid,"\n")
     values$msevents = rbind(values$msevents, data.frame(
       EventId = newid,
       NHI=NHI,
@@ -131,38 +136,6 @@ server <- shinyServer(function(input, output, session) {
     ))
   })
   
-  # detect timeline event drag
-  # observes input$tlMoveEvent and updates evtsDueDate
-  observe({
-    x = input$tlMoveEvent
-    req(x$item$start)
-    # min and max hack for bug introduced in shiny
-    updateDateInput(session, "evtsDueDate", value = x$item$start, min="2000-01-01", max="2100-01-01")
-  })
-  
-  # detect timeline event selection
-  # observes input$tlSelectEvents, checks for unsaved changes, calls editEvent with the selected event id
-  observe({
-    x = input$tlSelectEvent
-    cat("timeline event selection\n")
-    
-    req(x$items$id)
-    if (x$id == "evtsTimeline")
-      editEvent(x$items$id)
-  })
-  
-  # detect datatable event row selection
-  # observe input$evtsTable_rows_selected
-  observe({
-    cat("Data table row selection event\n")
-    # TODO Check Unsaved
-    
-    if (length(input$evtsTable_rows_selected) > 0) {
-      id = getFilteredEvents()[input$evtsTable_rows_selected, "EventId"]
-      editEvent(id)
-    }
-  })
-  
   # observe unsaved changes
   observe({
     input$evtsComment
@@ -192,14 +165,18 @@ server <- shinyServer(function(input, output, session) {
     }
   })
   
+  #############################################
+  # Event UI Buttons
+  #############################################
+  
+  observeEvent(input$evtsClearSearchButton, {
+    updateTextInput(session, "evtsSearchNHI", value="")
+  })
+  
   observeEvent(input$evtsNumberCalc, {
     x = getEvents() %>% filter(NHI == input$evtsNHI, Type == input$evtsType)
     req(x$Number)
     updateTextInput(session, "evtsNumber", value=(max(x$Number,na.rm=T) + 1))
-  })
-  
-  observeEvent(input$evtsClearSearchButton, {
-    updateTextInput(session, "evtsSearchNHI", value="")
   })
   
   observeEvent(input$evtsCompleteButton, {
@@ -252,36 +229,48 @@ server <- shinyServer(function(input, output, session) {
   })
   
   evtsRepeatButtonConfirmed = function() {
+    cat("Repeat event: ")
   
     pt = getPatients() %>%
       filter(NHI == input$evtsNHI) # get the patient associated with this event
-    drug = getDrugs() %>%
-      filter(Name == pt$Drug) # get the drug associated with this patient
-
-    stop() # need to implement getDrugEventTime
-    newduedate = input$evtsDueDate + months(drug[1, input$evtsType])
-
-    newid = createNewEvent(
-      NHI=input$evtsNHI,
+    
+    drug = getDrugs()[[pt$Drug]]$Maintenance
+    req(drug)
+    
+    if (input$evtsType %in% names(drug))
+    {
+      newduedate = input$evtsDueDate + months(drug[[input$evtsType]])
+      showNotification(cat("Setting due date for ", drug[[input$evtsType]], " months"))
+    }
+    else
+    {
+      newduedate = NA
+      showNotification("No maintenance schedule defined. Specify Due Date.")
+    }
+    
+    editNewEvent(NHI=input$evtsNHI,
       Type=input$evtsType,
       Number=as.numeric(input$evtsNumber)+1,
       DueDate=newduedate,
       Completed=ymd(""),
       Result="",
-      Comment=""
-    )
-
+      Comment="")
+    
     updateTextInput(session, "evtsSearchNHI", value=input$evtsNHI)
     updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
     updateTabsetPanel(session, "evtsViewerTabset", selected="Table")
 
-    x=getEvents() %>%
-      filter(NHI==input$evtsNHI)
-    selectRows(dataTableProxy("evtsTable"), selected=which(x$EventId == newid))
+    # 
+    # x=getEvents() %>%
+    #   filter(NHI==input$evtsNHI)
+    # selectRows(dataTableProxy("evtsTable"), selected=which(x$EventId == newid))
   }
   
   observeEvent(input$evtsSaveButton, {
     cat("Save Event\n")
+    
+    if (is.null(input$evtsDueDate))
+      showNotification("Warning: no Due Date set for this event")
     
     if (input$evtsId == -1) {
       newid = createNewEvent()
@@ -321,8 +310,48 @@ server <- shinyServer(function(input, output, session) {
     write.csv(getEvents(), file="data/events.csv", row.names=F)
     editNewEvent()
   })
+
+    
+  # =================================
+  # Timeline and DT
+  # =================================
+  
+  # detect timeline event drag
+  # observes input$tlMoveEvent and updates evtsDueDate
+  observe({
+    x = input$tlMoveEvent
+    req(x$item$start)
+    # min and max hack for bug introduced in shiny
+    updateDateInput(session, "evtsDueDate", value = x$item$start, min="2000-01-01", max="2100-01-01")
+  })
+  
+  # detect timeline event selection
+  # observes input$tlSelectEvents, checks for unsaved changes, calls editEvent with the selected event id
+  observe({
+    x = input$tlSelectEvent
+    
+    req(x$items$id)
+    if (x$id == "evtsTimeline") {
+      editEvent(x$items$id)
+      cat("timeline selection event: ", x$items$id,"\n")
+    }
+
+  })
+  
+  # detect datatable event row selection
+  # observe input$evtsTable_rows_selected
+  observe({
+    # TODO Check Unsaved
+    
+    if (length(input$evtsTable_rows_selected) > 0) {
+      id = getFilteredEvents()[input$evtsTable_rows_selected, "EventId"]
+      editEvent(id)
+      cat("Data table row selection event: ",id,"\n")
+    }
+  })
   
   output$evtsTimeline <- renderTimelinevis({
+    cat("Rendering timeline\n")
     
     items = getFilteredEvents() %>% 
       mutate(
