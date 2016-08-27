@@ -53,7 +53,6 @@ insertEventsUI = function() {
             column(
               width = 4,
               hiddenTextInput("evtsId", "Id", value = -1),
-              hiddenTextInput("evtsSaveEnabled", "SaveEnabled", value = "No"),
               selectInput(
                 "evtsType",
                 "Type",

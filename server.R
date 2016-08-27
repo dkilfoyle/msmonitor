@@ -7,6 +7,7 @@ library(sweetalertR)
 server <- shinyServer(function(input, output, session) {
   
   values = reactiveValues()
+  values$unsavedEventStatus = "No"
   
   getEvents = reactive({
     if (is.null(values[["msevents"]])) {
@@ -81,7 +82,7 @@ server <- shinyServer(function(input, output, session) {
     # hidden inputs
     updateTextInput(session, "evtsId", value = id)
     updateTextInput(session, "evtsNHI", value=NHI)
-    updateTextInput(session, "evtsSaveEnabled", value="NoStart")
+
     # visible inputs
     updateTextInput(session, "evtsDueDate", value = DueDate)
     updateTextInput(session, "evtsCompleted", value = Completed)
@@ -89,6 +90,9 @@ server <- shinyServer(function(input, output, session) {
     updateTextInput(session, "evtsNumber", value = Number)
     updateTextInput(session, "evtsResult", value = Result)
     updateTextInput(session, "evtsComment", value = Comment)
+    
+    values$unsavedEventStatus = "Update"
+    
     # ?? not needed now - cant remember why this needed for blank dates
     # js_string = '$("#evtsDueDate input").eq(0).val("").datepicker("update"); $("#evtsCompleted input").eq(0).val("").datepicker("update");'
     # session$sendCustomMessage(type='jsCode', list(value = js_string))
@@ -135,7 +139,7 @@ server <- shinyServer(function(input, output, session) {
     updateDateInput(session, "evtsDueDate", value = x$item$start, min="2000-01-01", max="2100-01-01")
   })
   
-  # detect event selection from timeline
+  # detect timeline event selection
   # observes input$tlSelectEvents, checks for unsaved changes, calls editEvent with the selected event id
   observe({
     # TODO Check Unsaved - save changes first?
@@ -151,7 +155,7 @@ server <- shinyServer(function(input, output, session) {
     }
   })
   
-  # detect event selection from DT table
+  # detect datatable event row selection
   # observe input$evtsTable_rows_selected
   observe({
     # TODO Check Unsaved
@@ -171,22 +175,24 @@ server <- shinyServer(function(input, output, session) {
     input$evtsResult
     input$evtsType
     
-    # TODO so hacky, must be better way....
+    # ignore non-user changes due to update function
     isolate({
-      if (input$evtsSaveEnabled=="NoStart")
-        updateTextInput(session, "evtsSaveEnabled", value="No")
-      else
-        updateTextInput(session, "evtsSaveEnabled", value="Yes")
+      values$unsavedEventStatus = ifelse(values$unsavedEventStatus=="Update", "No", "Yes")
     })
   })
   
   # observe change in unsaved change status
+  # observe values$unsavedEventStatus
   observe({
-    # cat(input$evtsSaveEnabled,"\n")
-    if (input$evtsSaveEnabled == "Yes")
+    if (values$unsavedEventStatus=="Yes"){
       enable("evtsSaveButton")
+      updateActionButton(session, "evtsSaveButton", label="<b>Save Changes</b>")
+    }
     else
+    {
       disable("evtsSaveButton")
+      updateActionButton(session, "evtsSaveButton", label="Save Changes")
+    }
   })
   
   observeEvent(input$evtsNumberCalc, {
