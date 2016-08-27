@@ -8,7 +8,7 @@ server <- shinyServer(function(input, output, session) {
   
   values = reactiveValues()
   values$unsavedEventStatus = "No"
-  
+
   getEvents = reactive({
     if (is.null(values[["msevents"]])) {
       DF = read.csv("data/events.csv", stringsAsFactors = F)
@@ -143,18 +143,12 @@ server <- shinyServer(function(input, output, session) {
   # detect timeline event selection
   # observes input$tlSelectEvents, checks for unsaved changes, calls editEvent with the selected event id
   observe({
-    cat("timeline event selection\n")
-    # TODO Check Unsaved - save changes first?
-    isolate({
-      if (values$unsavedEventStatus == "Yes")
-        sweetalert()
-    })
-    
     x = input$tlSelectEvent
+    cat("timeline event selection\n")
+    
     req(x$items$id)
-    if (x$id == "evtsTimeline") {
+    if (x$id == "evtsTimeline")
       editEvent(x$items$id)
-    }
   })
   
   # detect datatable event row selection
@@ -209,28 +203,56 @@ server <- shinyServer(function(input, output, session) {
   })
   
   observeEvent(input$evtsCompleteButton, {
-    # updateDateInput(session, "evtsCompleted", value = today())
-    js_string = '$("#evtsCompleted input").eq(0).val("").datepicker("update");'
-    session$sendCustomMessage(type='jsCode', list(value = js_string))
+    updateDateInput(session, "evtsCompleted", value = today())
   })
   
   observeEvent(input$evtsNewButton, {
-    # TODO Checked unsaved
+    if (values$unsavedEventStatus == "No")
+      evtsNewButtonConfirmed()
+    else
+      showModal(modalDialog(
+        title = "New Event",
+        "You have unsaved changes to the current event. Are you sure?",
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("evtsNewOK", "OK")
+        )
+      ))
+  })
+  
+  observeEvent(input$evtsNewOK, {
+    removeModal()
+    evtsNewButtonConfirmed()
+  })
     
-    isolate({
-      if (values$unsavedEventStatus == "Yes")
-        sweetalert()
-    })
-    
+  evtsNewButtonConfirmed = function() {
     # updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
     req(input$evtsNHI)
     updateTextInput(session, "evtsSearchNHI", input$evtsNHI)
     editNewEvent(NHI=input$evtsNHI)
-  })
+  }
   
   observeEvent(input$evtsRepeatButton, {
-    # TODO Check unsaved
-    
+    if (values$unsavedEventStatus == "No")
+      evtsRepeatButtonConfirmed()
+    else
+      showModal(modalDialog(
+        title = "Repeat Event",
+        "You have unsaved changes to the current event. Are you sure?",
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton("evtsRepeatOK", "OK")
+        )
+      ))
+  })
+  
+  observeEvent(input$evtsRepeatOK, {
+    removeModal()
+    evtsRepeatButtonConfirmed()
+  })
+  
+  evtsRepeatButtonConfirmed = function() {
+  
     pt = getPatients() %>%
       filter(NHI == input$evtsNHI) # get the patient associated with this event
     drug = getDrugs() %>%
@@ -256,12 +278,10 @@ server <- shinyServer(function(input, output, session) {
     x=getEvents() %>%
       filter(NHI==input$evtsNHI)
     selectRows(dataTableProxy("evtsTable"), selected=which(x$EventId == newid))
-  })
+  }
   
   observeEvent(input$evtsSaveButton, {
     cat("Save Event\n")
-    logjs("save Event")
-    cat(input$evtsCompleted)
     
     if (input$evtsId == -1) {
       newid = createNewEvent()
