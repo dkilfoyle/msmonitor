@@ -92,10 +92,6 @@ server <- shinyServer(function(input, output, session) {
     updateTextInput(session, "evtsComment", value = Comment)
     
     values$unsavedEventStatus = "Update"
-    
-    # ?? not needed now - cant remember why this needed for blank dates
-    # js_string = '$("#evtsDueDate input").eq(0).val("").datepicker("update"); $("#evtsCompleted input").eq(0).val("").datepicker("update");'
-    # session$sendCustomMessage(type='jsCode', list(value = js_string))
   }
   
   # edit an existing event
