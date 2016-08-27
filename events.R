@@ -49,6 +49,11 @@ insertEventsUI = function() {
     mainPanel(
       bsCollapse(
         bsCollapsePanel("Selected Event",
+          conditionalPanel(condition="input.evtsNHI ==''",
+            wellPanel(
+              p("Find events using the search bar to the left. Then select an event from the timeline."),
+              p("OR: Select a patient from the Patients tab and generate a new event from for the patient."))),
+          conditionalPanel(condition="input.evtsNHI != ''", 
           fluidRow(
             column(
               width = 4,
@@ -85,7 +90,7 @@ insertEventsUI = function() {
                 disabled(actionButton("evtsSaveButton", "Save Changes"))
               )
             )
-          )),
+          ))),
         id = "evtsCollapse",
         multiple = T
       ),
