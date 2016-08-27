@@ -6,6 +6,7 @@ library(stringr)
 library(shinyBS)
 library(timelinevis)
 library(listviewer)
+library(shinyjs)
 
 source("utils.R")
 
@@ -14,6 +15,7 @@ ui <- shinyUI(
   "MS Monitoring Program",
     
   tabPanel("Info",
+    useShinyjs(),
     wellPanel(
     includeMarkdown("info.md"))),
   
@@ -63,6 +65,7 @@ ui <- shinyUI(
             fluidRow(
               column(width=4,
                 hiddenTextInput("evtsId", "Id", value=-1),
+                hiddenTextInput("evtsSaveEnabled", "SaveEnabled", value="No"),
                 selectInput("evtsType", "Type", choices=c("LFT","MRI","JCV","FBC","MSTAC"), selected=NULL),
                 textButtonInput("evtsNumber", "Number", "evtsNumberCalc", "Calc", value=""),
                 textareaInput("evtsComment", "Comment", value="")
@@ -85,7 +88,7 @@ ui <- shinyUI(
                   actionButton("evtsRepeatButton", "Repeat Event"),
                   actionButton("evtsNewButton", "New Blank Event"),
                   actionButton("evtsDeleteButton", "Delete Event"),
-                  actionButton("evtsSaveButton", "Save Changes")
+                  disabled(actionButton("evtsSaveButton", "Save Changes"))
                 )
               ))
           ),
