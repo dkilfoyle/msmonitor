@@ -61,13 +61,13 @@ insertEventsUI = function() {
               ),
               textButtonInput("evtsNumber", "Number", "evtsNumberCalc", "Calc", value =
                   ""),
-              textareaInput("evtsComment", "Comment", value = "")
+              textAreaInput("evtsComment", "Comment", value = "")
             ),
             column(
               width = 4,
-              dateInput("evtsDueDate", "Due Date", ""),
-              dateInput("evtsCompleted", "Date Completed", ""),
-              textareaInput("evtsResult", "Result", value = "")
+              dkdateInput("evtsDueDate", "Due Date", NA),
+              dkdateInput("evtsCompleted", "Date Completed", NA),
+              textAreaInput("evtsResult", "Result", value = "")
             ),
             column(
               width = 4,

@@ -1,4 +1,4 @@
 "EventId","NHI","Type","Number","DueDate","Completed","Result","Comment"
 1,"ABC1234","MRI","1",2016-06-01,2016-06-05,"No new lesions","a comment"
 2,"ABC1234","JCV","1",2016-02-02,2016-02-05,"Neg",NA
-4,"ABC1234","MRI","2",2017-06-01,2016-08-19,"",NA
+4,"ABC1234","MRI","3",2016-11-10,NA,"",""

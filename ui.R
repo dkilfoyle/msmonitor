@@ -16,19 +16,19 @@ source("setup.R")
 ui <- shinyUI(
   navbarPage("MS Monitoring Program",
     
-  tabPanel("Info",
-    useShinyjs(),
-    wellPanel(includeMarkdown("info.md"))),
-  
-  tabPanel("Events",
-    insertEventsUI()),
+    tabPanel("Info",
+      useShinyjs(),
+      wellPanel(includeMarkdown("info.md"))),
     
-  tabPanel("Patients",
-    insertPatientsUI()),
-
-  tabPanel("Setup",
-    insertSetupUI()),
-
-  id="mainTabPanel",
-  selected="Events"
+    tabPanel("Events",
+      insertEventsUI()),
+      
+    tabPanel("Patients",
+      insertPatientsUI()),
+  
+    tabPanel("Setup",
+      insertSetupUI()),
+  
+    id="mainTabPanel",
+    selected="Events"
 ))

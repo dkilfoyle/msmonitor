@@ -84,8 +84,12 @@ server <- shinyServer(function(input, output, session) {
     updateTextInput(session, "evtsNHI", value=NHI)
 
     # visible inputs
+    if (is.null(DueDate)) DueDate=NA
+    if (is.null(Completed)) Completed=NA
+    
     updateTextInput(session, "evtsDueDate", value = DueDate)
     updateTextInput(session, "evtsCompleted", value = Completed)
+    
     updateTextInput(session, "evtsType", value = Type)
     updateTextInput(session, "evtsNumber", value = Number)
     updateTextInput(session, "evtsResult", value = Result)
@@ -96,6 +100,7 @@ server <- shinyServer(function(input, output, session) {
   
   # edit an existing event
   editEvent = function(id) {
+    cat("Edit event: ",id, "\n")
     updateCollapse(session, "evtsCollapse", open = "Selected Event")
     se = getEvents() %>% filter(EventId==id)
     
@@ -110,7 +115,7 @@ server <- shinyServer(function(input, output, session) {
   
   # edit an unsaved blank event
   editNewEvent = function(NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment="") {
-    # cat("editNewEvent", NHI, "\n")
+    cat("editNewEvent", NHI, "\n")
     updateEventInputs(id=-1, 
       NHI=NHI, Type=Type, Number=Number, 
       DueDate=DueDate, Completed=Completed,
@@ -138,9 +143,10 @@ server <- shinyServer(function(input, output, session) {
   # detect timeline event selection
   # observes input$tlSelectEvents, checks for unsaved changes, calls editEvent with the selected event id
   observe({
+    cat("timeline event selection\n")
     # TODO Check Unsaved - save changes first?
     isolate({
-      if (input$evtsSaveEnabled == "Yes")
+      if (values$unsavedEventStatus == "Yes")
         sweetalert()
     })
     
@@ -154,6 +160,7 @@ server <- shinyServer(function(input, output, session) {
   # detect datatable event row selection
   # observe input$evtsTable_rows_selected
   observe({
+    cat("Data table row selection event\n")
     # TODO Check Unsaved
     
     if (length(input$evtsTable_rows_selected) > 0) {
@@ -202,14 +209,16 @@ server <- shinyServer(function(input, output, session) {
   })
   
   observeEvent(input$evtsCompleteButton, {
-    updateDateInput(session, "evtsCompleted", value = today())
+    # updateDateInput(session, "evtsCompleted", value = today())
+    js_string = '$("#evtsCompleted input").eq(0).val("").datepicker("update");'
+    session$sendCustomMessage(type='jsCode', list(value = js_string))
   })
   
   observeEvent(input$evtsNewButton, {
     # TODO Checked unsaved
     
     isolate({
-      if (input$evtsSaveEnabled == "Yes")
+      if (values$unsavedEventStatus == "Yes")
         sweetalert()
     })
     
@@ -222,34 +231,37 @@ server <- shinyServer(function(input, output, session) {
   observeEvent(input$evtsRepeatButton, {
     # TODO Check unsaved
     
-    pt = getPatients() %>% 
+    pt = getPatients() %>%
       filter(NHI == input$evtsNHI) # get the patient associated with this event
-    drug = getDrugs() %>%  
+    drug = getDrugs() %>%
       filter(Name == pt$Drug) # get the drug associated with this patient
-    
+
     stop() # need to implement getDrugEventTime
     newduedate = input$evtsDueDate + months(drug[1, input$evtsType])
-    
+
     newid = createNewEvent(
       NHI=input$evtsNHI,
       Type=input$evtsType,
       Number=as.numeric(input$evtsNumber)+1,
       DueDate=newduedate,
       Completed=ymd(""),
-      Result="", 
+      Result="",
       Comment=""
     )
-    
+
     updateTextInput(session, "evtsSearchNHI", value=input$evtsNHI)
     updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
     updateTabsetPanel(session, "evtsViewerTabset", selected="Table")
-    
-    x=getEvents() %>% 
+
+    x=getEvents() %>%
       filter(NHI==input$evtsNHI)
     selectRows(dataTableProxy("evtsTable"), selected=which(x$EventId == newid))
   })
   
   observeEvent(input$evtsSaveButton, {
+    cat("Save Event\n")
+    logjs("save Event")
+    cat(input$evtsCompleted)
     
     if (input$evtsId == -1) {
       newid = createNewEvent()
@@ -257,7 +269,7 @@ server <- shinyServer(function(input, output, session) {
     }
     else
       saveRow = which(values$msevents$EventId == input$evtsId)
-
+    
     values$msevents[saveRow, "DueDate"] = input$evtsDueDate
     values$msevents[saveRow, "Type"] = input$evtsType
     values$msevents[saveRow, "Number"] = input$evtsNumber
@@ -267,7 +279,7 @@ server <- shinyServer(function(input, output, session) {
     values$msevents[saveRow, "NHI"] = input$evtsNHI
     write.csv(getEvents(), file="data/events.csv", row.names=F)
     
-    updateTextInput(session, "evtsSaveEnabled", "No")
+    values$unsavedEventStatus="No"
   })
   
   observeEvent(input$evtsDeleteButton, {
