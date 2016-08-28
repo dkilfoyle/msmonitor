@@ -140,7 +140,8 @@ server <- shinyServer(function(input, output, session) {
   observe({
     output$evtsInfo = renderUI(tagList(
       h3(input$evtsNHI, style="margin-top:0px; margin-bottom:0px;"),
-      p(values$mspts$Surname[values$mspts$NHI==input$evtsNHI],style="margin-bottom:0px"),
+      p(paste0(values$mspts$Surname[values$mspts$NHI==input$evtsNHI],", ",
+        values$mspts$FirstName[values$mspts$NHI==input$evtsNHI]),style="margin-bottom:0px"),
       p(values$mspts$Drug[values$mspts$NHI==input$evtsNHI],style="margin-bottom:0px")
     ))
   })
@@ -250,7 +251,7 @@ server <- shinyServer(function(input, output, session) {
     if (input$evtsType %in% names(drug))
     {
       newduedate = input$evtsDueDate + months(drug[[input$evtsType]])
-      showNotification(cat("Setting due date for ", drug[[input$evtsType]], " months"))
+      showNotification(paste0("Setting due date for ", drug[[input$evtsType]], " months"))
     }
     else
     {

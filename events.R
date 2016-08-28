@@ -51,8 +51,8 @@ insertEventsUI = function() {
         bsCollapsePanel("Selected Event",
           conditionalPanel(condition="input.evtsNHI ==''",
             wellPanel(
-              p("Find events using the search bar to the left. Then select an event from the timeline."),
-              p("OR: Select a patient from the Patients tab and generate a new event from for the patient."))),
+              p("Search for existing events using the filter sidebar to the left. Then select an event from the timeline or table below."),
+              p("OR: Select a patient from the Patients tab and generate a new event for the patient."))),
           conditionalPanel(condition="input.evtsNHI != ''", 
           fluidRow(
             column(
@@ -92,7 +92,8 @@ insertEventsUI = function() {
             )
           ))),
         id = "evtsCollapse",
-        multiple = T
+        multiple = F,
+        open="Selected Event"
       ),
       tabsetPanel(
         tabPanel(
