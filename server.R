@@ -11,6 +11,15 @@ server <- shinyServer(function(input, output, session) {
   values = reactiveValues()
   values$unsavedEventStatus = "No"
 
+  showAllEventsForPatient = function(NHI) {
+    updateTabsetPanel(session, "mainTabPanel","Events")
+    updateCollapse(session, "evtsCollapse", open = "Selected Event")
+    updateTabsetPanel(session, "evtsViewerTabset", "Table")
+    updateTextInput(session, "evtsSearchNHI", value=NHI)
+    updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
+    updateRadioButtons(session, "evtsFilterType", selected="All")
+  }
+  
   getEvents = reactive({
     if (is.null(values[["msevents"]])) {
       DF = read.csv("data/events.csv", stringsAsFactors = F)
@@ -70,7 +79,7 @@ server <- shinyServer(function(input, output, session) {
       } else
       {
         items = items %>%
-          filter(DueDate > today(), DueDate < endDate, is.na(Completed))
+          filter(DueDate >= today(), DueDate < endDate, is.na(Completed))
       }
     }
     
@@ -203,9 +212,10 @@ server <- shinyServer(function(input, output, session) {
   })
     
   evtsNewButtonConfirmed = function() {
-    # updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
     req(input$evtsNHI)
     updateTextInput(session, "evtsSearchNHI", input$evtsNHI)
+    updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
+    updateRadioButtons(session, "evtsFilterType", selected="All")
     editNewEvent(NHI=input$evtsNHI)
   }
   
@@ -440,8 +450,8 @@ server <- shinyServer(function(input, output, session) {
     pts
   })
   
+  # patient table row selection event
   observe({
-    
     if (length(input$ptsTable_rows_selected) > 0) {
       updateCollapse(session, "ptsCollapse", open = "Selected Patient")
       selrow = getFilteredPatients()[input$ptsTable_rows_selected,]
@@ -454,6 +464,7 @@ server <- shinyServer(function(input, output, session) {
     }
   })
   
+  # new patient button
   observeEvent(input$ptsNew, {
     updateTextInput(session, "ptsNHI", value = "Enter details")
     updateTextInput(session, "ptsFirstName", value = "then")
@@ -463,22 +474,29 @@ server <- shinyServer(function(input, output, session) {
     updateRadioButtons(session, "ptsJCV", selected="Neg")
   })
   
+  # delete patient button
   observeEvent(input$ptsDelete, {
-    js_string = 'Shiny.onInputChange("ptsDeleteConfirm",confirm("This will also delete all events associated with this NHI! Are you sure?"));'
-    session$sendCustomMessage(type='jsCode', list(value = js_string))
+    showModal(modalDialog(
+      title = "Delete Patient",
+      "This will also delete all events associated with this NHI! Are you sure?",
+      footer = tagList(
+        modalButton("Cancel"),
+        actionButton("ptsDeleteConfirm", "OK")
+      )
+    ))   
   })
   
   observeEvent(input$ptsDeleteConfirm, {
-    if(input$ptsDeleteConfirm) {
-      evts = getEvents()
-      evts = evts[-which(evts$NHI == input$ptsNHI), ]
-      values[["msevents"]] = evts
-      pts = getPatients()
-      pts = pts[-which(pts$NHI==input$ptsNHI), ]
-      values[["mspts"]] = pts
-    }
+    cat("Delete patient: ", pts$NHI, "\n")
+    evts = getEvents()
+    evts = evts[-which(evts$NHI == input$ptsNHI), ]
+    values[["msevents"]] = evts
+    pts = getPatients()
+    pts = pts[-which(pts$NHI==input$ptsNHI), ]
+    values[["mspts"]] = pts
   })
   
+  # save patient button
   observeEvent(input$ptsSave, {
     saveRow = which(getPatients()$NHI == input$ptsNHI)
     newRow = list(
@@ -500,38 +518,46 @@ server <- shinyServer(function(input, output, session) {
   })
   
   initiationEvent = function(type, emonths) {
-    createNewEvent(
+    cat("Create Initiation Event: ", type, "\n")
+    id=createNewEvent(
       NHI=input$ptsNHI,
       Type=type,
       Number=1,
       DueDate = today() %m+% months(emonths)
     )
+    return(id)
   }
   
   observeEvent(input$ptsGenerateInitiationEvents, {
     # TODO: check is this pt saveed yet
     drug = getDrugs()[[input$ptsDrug]]
-    cat(input$ptsJCV)
-    if (!is.null(drug)) {
-      sapply(names(drug$Initial), function (event) {
-        if (event == "JCPos")
-          if (input$ptsJCV == "Pos") {
-              sapply(names(drug$Initial$JCPos), function(event2) { initiationEvent(event2, drug$Initial$JCPos[[event2]])})
-          }
-        else if (event == "JCNeg")
-          if (input$ptsJCV == "Neg") {
-            sapply(names(drug$Initial$JCNeg), function(event2) { initiationEvent(event2, drug$Initial$JCNeg[[event2]])})
-          }
-        else {
-          initiationEvent(event, drug$Initial[[event]])
-        }
-      })
+
+    req(drug)
+    req(input$ptsJCV)
+    
+    ids = c()
+    
+    for (event in names(drug$Initial)) {
+      if (event == "JCPos" & input$ptsJCV=="Pos")
+        for (event2 in names(drug$Initial$JCPos))
+          ids=c(ids, initiationEvent(event2, drug$Initial$JCPos[[event2]]))
+      else if (event == "JCNeg" & input$ptsJCV=="Neg")
+        for (event2 in names(drug$Initial$JCNeg))
+          ids=c(ids, initiationEvent(event2, drug$Initial$JCNeg[[event2]]))
+      else if ((event %in% c("JCNeg","JCPos"))==F)
+        ids=c(ids, initiationEvent(event, drug$Initial[[event]]))
     }
+    
+    # TODO: Save events
+    
+    showAllEventsForPatient(input$ptsNHI)
+    
+    req(ids[1])
+    editEvent(ids[1])
   })
   
   observeEvent(input$ptsNewEvent, {
-    updateTabsetPanel(session, "mainTabPanel","Events")
-    updateCollapse(session, "evtsCollapse", open = "Selected Event")
+    showAllEventsForPatient(pts$NHI)
     editNewEvent(NHI=input$ptsNHI)
   })
   
