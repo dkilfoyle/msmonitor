@@ -2,16 +2,6 @@ insertEventsUI = function() {
   sidebarLayout(
     sidebarPanel(
       includeCSS("www/msmonitor.css"),
-      tags$script(
-        HTML(
-          '
-          Shiny.addCustomMessageHandler("jsCode",
-          function(message) {
-          eval(message.value);
-          }
-          );'
-        )
-        ),
       titledPanel(
         "Filter Events",
         textButtonInput(

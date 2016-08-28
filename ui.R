@@ -11,7 +11,7 @@ library(shinyjs)
 source("utils.R")
 source("events.R")
 source("patients.R")
-source("setup.R")
+source("drugs.R")
 
 ui <- shinyUI(
   navbarPage("MS Monitoring Program",
@@ -26,8 +26,8 @@ ui <- shinyUI(
     tabPanel("Patients",
       insertPatientsUI()),
   
-    tabPanel("Setup",
-      insertSetupUI()),
+    tabPanel("Drugs",
+      insertDrugsUI()),
   
     id="mainTabPanel",
     selected="Events"
