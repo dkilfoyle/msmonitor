@@ -12,7 +12,7 @@ server <- shinyServer(function(input, output, session) {
   
   values = reactiveValues()
   values$unsavedEventStatus = "No"
-  demoVersion = F
+  demoVersion = T
 
   showAllEventsForPatient = function(NHI) {
     updateTabsetPanel(session, "mainTabPanel","Events")
