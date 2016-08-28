@@ -130,8 +130,9 @@ server <- shinyServer(function(input, output, session) {
   # observes input$evtsNHI and generates a sticker html in output$evtsInfo
   observe({
     output$evtsInfo = renderUI(tagList(
-      h3(input$evtsNHI, style="margin-top:0px"),
-      p(values$mspts$Surname[values$mspts$NHI==input$evtsNHI],style="margin-bottom:0px")
+      h3(input$evtsNHI, style="margin-top:0px; margin-bottom:0px;"),
+      p(values$mspts$Surname[values$mspts$NHI==input$evtsNHI],style="margin-bottom:0px"),
+      p(values$mspts$Drug[values$mspts$NHI==input$evtsNHI],style="margin-bottom:0px")
     ))
   })
   
