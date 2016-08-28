@@ -1,3 +1,5 @@
+library(timelinevis)
+
 insertEventsUI = function() {
   sidebarLayout(
     sidebarPanel(

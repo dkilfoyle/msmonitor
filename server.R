@@ -2,7 +2,9 @@ library(shiny)
 library(DT)
 library(yaml)
 library(shinyjs)
-library(sweetalertR)
+library(dplyr)
+library(lubridate)
+library(stringr)
 
 server <- shinyServer(function(input, output, session) {
   

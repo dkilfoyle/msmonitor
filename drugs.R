@@ -1,3 +1,5 @@
+library(listviewer)
+
 insertDrugsUI <- function() {
   sidebarLayout(
     sidebarPanel(

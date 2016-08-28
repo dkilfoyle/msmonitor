@@ -1,11 +1,5 @@
 library(shiny)
-library(rhandsontable)
-library(dplyr)
-library(lubridate)
-library(stringr)
 library(shinyBS)
-library(timelinevis)
-library(listviewer)
 library(shinyjs)
 
 source("utils.R")
