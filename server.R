@@ -626,7 +626,7 @@ server <- shinyServer(function(input, output, session) {
   # })
   
   output$drugsList = renderJsonedit({
-    jsonedit(getDrugs(), "change" = htmlwidgets::JS('function(){
+    jsonedit(getDrugs(), name="Drugs", "change" = htmlwidgets::JS('function(){
         Shiny.onInputChange("jsonEditorChangeEvent", 
           {id: event.currentTarget.parentNode.id, data:event.currentTarget.parentNode.editor.get()});}'))
   })

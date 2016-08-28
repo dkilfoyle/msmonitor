@@ -1,7 +1,6 @@
 Natalizumab:
   Initial:
     MSTAC-Application: 0
-    Baseline-Bloods: 0
     Nurse-Clinic: 1
     JCV: 6
     JCPos:
@@ -13,15 +12,42 @@ Natalizumab:
     JCV: 6
     MSTAC-Renew: 12
     JCPos:
-      MRI: 12
-    JCNeg:
       MRI: 6
+    JCNeg:
+      MRI: 12
 Dimethyl-Fumarate:
   Initial:
     MSTAC-Application: 0
-    Baseline-Bloods: 0
     MSTAC-Renew: 12
     FBC: 3
   Maintenance:
     FBC: 3
+    MSTAC-Renew: 12
+Fingolimod:
+  Initial:
+    MSTAC-Application: 0
+    MSTAC-Renew: 12
+    OCT: 3
+  Maintenance:
+    OCT: 6
+    MSTAC-Renew: 12
+Teriflunomide:
+  Initial:
+    MSTAC-Application: 0
+    MSTAC-Renew: 12
+    LFT: 0.5
+  Maintenance:
+    LFT: 1
+    MSTAC-Renew: 12
+Betainterferon:
+  Initial:
+    MSTAC-Application: 0
+    MSTAC-Renew: 12
+  Maintenance:
+    MSTAC-Renew: 12
+Glatiramer:
+  Initial:
+    MSTAC-Application: 0
+    MSTAC-Renew: 12
+  Maintenance:
     MSTAC-Renew: 12

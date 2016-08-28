@@ -32,7 +32,7 @@ insertEventsUI = function() {
           choices = c("All",
             "MRI",
             "JCV",
-            "MSTAC",
+            "MSTAC-Renew",
             "Followup")
         )
       )
@@ -53,7 +53,7 @@ insertEventsUI = function() {
               selectInput(
                 "evtsType",
                 "Type",
-                choices = c("LFT", "MRI", "JCV", "FBC", "MSTAC-Application", "MSTAC-Renew", "Nurse-Clinic"),
+                choices = c("LFT", "MRI", "JCV", "FBC", "OCT", "MSTAC-Application", "MSTAC-Renew", "Nurse-Clinic"),
                 selected = NULL
               ),
               textButtonInput("evtsNumber", "Number", "evtsNumberCalc", "Calc", value =
