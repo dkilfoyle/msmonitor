@@ -27,7 +27,6 @@ server <- shinyServer(function(input, output, session) {
   
   # create a new event record in values, usually activated by save button
   createNewEvent = function(NHI="", Type="", Number=1, DueDate=ymd(""), Completed=ymd(""), Result="", Comment="") {
-    req(NHI,Type)
     newid = max(values$msevents$EventId)+1
     cat("Create new event: ",newid,"\n")
     values$msevents = rbind(values$msevents, data.frame(
@@ -267,6 +266,8 @@ server <- shinyServer(function(input, output, session) {
   }
   
   observeEvent(input$evtsSaveButton, {
+    
+    req(input$evtsNHI)
     cat("Save Event\n")
     
     if (is.null(input$evtsDueDate))
