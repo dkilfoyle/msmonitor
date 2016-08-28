@@ -12,6 +12,7 @@ server <- shinyServer(function(input, output, session) {
   
   values = reactiveValues()
   values$unsavedEventStatus = "No"
+  demoVersion = F
 
   showAllEventsForPatient = function(NHI) {
     updateTabsetPanel(session, "mainTabPanel","Events")
@@ -269,14 +270,7 @@ server <- shinyServer(function(input, output, session) {
       Result="",
       Comment="")
     
-    updateTextInput(session, "evtsSearchNHI", value=input$evtsNHI)
-    updateRadioButtons(session, "evtsFilterTimeframe", selected="All")
-    updateTabsetPanel(session, "evtsViewerTabset", selected="Table")
-
-    # 
-    # x=getEvents() %>%
-    #   filter(NHI==input$evtsNHI)
-    # selectRows(dataTableProxy("evtsTable"), selected=which(x$EventId == newid))
+    showAllEventsForPatient(input$evtsNHI)
   }
   
   observeEvent(input$evtsSaveButton, {
@@ -301,10 +295,17 @@ server <- shinyServer(function(input, output, session) {
     values$msevents[saveRow, "Completed"] = input$evtsCompleted
     values$msevents[saveRow, "Comment"] = input$evtsComment
     values$msevents[saveRow, "NHI"] = input$evtsNHI
-    write.csv(getEvents(), file="data/events.csv", row.names=F)
+    saveEventsFile()
     
     values$unsavedEventStatus="No"
   })
+  
+  saveEventsFile = function() {
+    if (!demoVersion)
+      write.csv(getEvents(), file="data/events.csv", row.names=F)
+    else
+      showNotification("Save changes inactivated in demo version")
+  }
   
   observeEvent(input$evtsDeleteButton, {
     showModal(modalDialog(
@@ -517,8 +518,15 @@ server <- shinyServer(function(input, output, session) {
     else
       values$mspts[saveRow,] = newRow
     
-    write.csv(getPatients(), file="data/patients.csv", row.names=F)
+    savePatientsFile()
   })
+  
+  savePatientsFile = function() {
+    if (!demoVersion)
+      write.csv(getPatients(), file="data/patients.csv", row.names=F)
+    else
+      showNotification("Save changes disabled in demo version!")
+  }
   
   initiationEvent = function(type, emonths) {
     cat("Create Initiation Event: ", type, "\n")
@@ -526,7 +534,7 @@ server <- shinyServer(function(input, output, session) {
       NHI=input$ptsNHI,
       Type=type,
       Number=1,
-      DueDate = today() %m+% months(emonths)
+      DueDate = today() %m+% weeks(emonths*4)
     )
     return(id)
   }
@@ -537,7 +545,6 @@ server <- shinyServer(function(input, output, session) {
 
     req(drug)
     req(input$ptsJCV)
-    
     ids = c()
     
     for (event in names(drug$Initial)) {
@@ -551,10 +558,8 @@ server <- shinyServer(function(input, output, session) {
         ids=c(ids, initiationEvent(event, drug$Initial[[event]]))
     }
     
-    # TODO: Save events
-    
+    saveEventsFile()
     showAllEventsForPatient(input$ptsNHI)
-    
     req(ids[1])
     editEvent(ids[1])
   })
