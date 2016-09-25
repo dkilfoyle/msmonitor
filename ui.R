@@ -1,6 +1,7 @@
 library(shiny)
 library(shinyBS)
 library(shinyjs)
+library(markdown)
 
 source("utils.R")
 source("events.R")

@@ -62,8 +62,8 @@ insertEventsUI = function() {
             ),
             column(
               width = 4,
-              dkdateInput("evtsDueDate", "Due Date", NA),
-              dkdateInput("evtsCompleted", "Date Completed", NA),
+              dkdateInput("evtsDueDate", "Due Date", NA, daysOfWeekDisabled="0,6"),
+              dkdateInput("evtsCompleted", "Date Completed", NA, daysOfWeekDisabled="0,6"),
               textAreaInput("evtsResult", "Result", value = "")
             ),
             column(

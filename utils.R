@@ -38,6 +38,7 @@ library(htmltools)
 
 dkdateInput <- function(inputId, label, value = NULL, min = NULL, max = NULL,
   format = "yyyy-mm-dd", startview = "month", weekstart = 0, language = "en",
+  autoClose = T, clearBtn = T, todayHighlight = T, daysOfWeekDisabled = "",
   width = NULL) {
   
   # If value is a date object, convert it to a string with yyyy-mm-dd format
@@ -53,7 +54,7 @@ dkdateInput <- function(inputId, label, value = NULL, min = NULL, max = NULL,
       class = "shiny-date-input form-group shiny-input-container",
       style = if (!is.null(width)) paste0("width: ", validateCssUnit(width), ";"),
       
-      controlLabel(inputId, label),
+      shiny:::controlLabel(inputId, label),
       tags$input(type = "text",
         # datepicker class necessary for dropdown to display correctly
         class = "form-control datepicker",
@@ -63,29 +64,16 @@ dkdateInput <- function(inputId, label, value = NULL, min = NULL, max = NULL,
         `data-date-start-view` = startview,
         `data-min-date` = min,
         `data-max-date` = max,
-        `data-date-autoclose` = T,
-        `data-date-clear-btn` = T,
-        `data-initial-date` = value
+        `data-date-autoclose` = autoClose,
+        `data-date-clear-btn` = clearBtn,
+        `data-initial-date` = value,
+        `data-date-today-highlight` = todayHighlight,
+        `data-date-days-of-week-disabled` = daysOfWeekDisabled
       )
     ),
-    dkdatePickerDependency
+    shiny:::datePickerDependency
   )
 }
-controlLabel <- function(controlName, label) {
-  label %AND% tags$label(class = "control-label", `for` = controlName, label)
-}
-
-`%AND%` <- function(x, y) {
-  if (!is.null(x) && !is.na(x))
-    if (!is.null(y) && !is.na(y))
-      return(y)
-  return(NULL)
-}
-
-dkdatePickerDependency <- htmlDependency(
-  "bootstrap-datepicker", "1.6.4", c(href = "datepicker"),
-  script = "js/bootstrap-datepicker.js",
-  stylesheet = "css/bootstrap-datepicker.css")
 
 
 # ?? not needed now - cant remember why this needed for blank dates
